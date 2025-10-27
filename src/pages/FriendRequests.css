@@ -1,0 +1,18 @@
+.fr-root {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;
+}
+.fr-section { margin: 1rem 0; padding: 1rem; border: 1px solid #eee; border-radius: 6px }
+.fr-list { list-style: none; padding: 0; margin: 0 }
+.fr-item { display:flex; justify-content:space-between; align-items:center; padding: 8px 0; border-bottom: 1px dashed #f0f0f0 }
+.fr-item-left { display:flex; flex-direction:column }
+.fr-item-actions { display:flex; gap:8px }
+.btn-accept { background:#28a745; color:white; border:none; padding:6px 10px; border-radius:4px }
+.btn-reject { background:#dc3545; color:white; border:none; padding:6px 10px; border-radius:4px }
+.fr-search { display:flex; gap:8px; margin-bottom: 8px }
+.fr-results { display:flex; flex-direction:column; gap:8px }
+.fr-result { display:flex; justify-content:space-between; align-items:center; padding:8px; border:1px solid #f2f2f2; border-radius:4px }
+.fr-profile { margin-top: 12px; padding: 8px; border: 1px solid #ddd; border-radius: 6px }
+.fr-sub { color:#666; font-size:0.9rem }
+.fr-error { color: darkred }
