@@ -1,11 +1,22 @@
-function App() {
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./components/theme-provider"
+import Signup from "./pages/signup/Signup";
 
+
+
+function App() {
   return (
-    <>
-      <div>
-        <h1>Hello World</h1>
-      </div>
-    </>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Router>
+        <Routes>
+          {/* Default route */}
+          <Route path="/" element={<Navigate to="/signup" replace />} />
+
+          {/* Actual routes */}
+          <Route path="/signup" element={<Signup />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   )
 }
 
