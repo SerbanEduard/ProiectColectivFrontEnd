@@ -71,3 +71,49 @@ export default defineConfig([
   },
 ])
 ```
+
+# Swagger + OpenApi
+
+There is a script to generate the api , in order for the script to work the backend must be running
+
+While the backend runs , run this command on the frontend : 
+```
+npm run generate:api
+```
+
+The files will be generated under the "api" folder
+
+
+# Shadcn/ui design system + Tailwind
+
+!Both Shadcn/ui and Tailwind have been somewhat installed if you read this
+
+Ask chatgpt what is a design system and Shadcn/ui if you don't know
+
+Shadcn/ui IS A DESIGN SYSTEM
+
+Basicly a design system is a collection of components that have a consistent styling
+
+Whenever you write a JSX component consult this site to see if there is something you could use some of its components instead:
+
+https://ui.shadcn.com/docs/components
+
+Whenever you want to use a component that u didn't use before u have to install it , example for alert dialog:
+
+```
+npx shadcn@latest add alert-dialog
+```
+It will be installed under the components/ui folder , and it can be further modified
+
+(for every component the command that installs it is listed in its corresponding site page)
+
+If you want to tweak or want to play with styling i recommend using this site:
+
+https://tweakcn.com/editor/theme
+
+
+Tailwind is a way of styling , it is inline code , for and example on how its used you can see the Signup.tsx folder with the component
+
+
+
+
