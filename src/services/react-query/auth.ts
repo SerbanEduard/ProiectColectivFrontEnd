@@ -1,10 +1,11 @@
 // queries/auth.ts
 import { useMutation } from '@tanstack/react-query'
-import { DefaultApi, type DtoSignUpUserRequest, type DtoSignUpUserResponse } from '../../api' // from OpenAPI
+import { Configuration, DefaultApi, type DtoSignUpUserRequest, type DtoSignUpUserResponse } from '../../api' // from OpenAPI
 import { useAuthStore } from '../stores/useAuthStore'
 
-
-const api = new DefaultApi();
+const api = new DefaultApi(
+  new Configuration({ basePath: '/api' }) // proxy will handle it
+);
 
 export const useSignup = () => {
     const store = useAuthStore();
