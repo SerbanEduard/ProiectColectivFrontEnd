@@ -12,7 +12,7 @@ function App() {
       <Router>
         <Routes>
           {/* Default route */}
-          <Route path="/" element={<Navigate to="/forgot-password" replace />} />
+          <Route path="/" element={<Navigate to="/signup" replace />} />
 
           {/* Actual routes */}
           <Route path="/signup" element={<Signup />} />
