@@ -1,16 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useSignup } from "@/services/react-query/auth";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { useSignup } from "@/services/react-query/auth.ts";
 import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import * as z from "zod"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { ModelTopicOfInterest, type DtoSignUpUserResponse } from "@/api";
 import { useState } from "react";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label.tsx";
 
 const formSchema = z.object({
   firstName : z.string()
