@@ -34,7 +34,7 @@ export default function Login() {
   useEffect(() => {
     const token = getStoredToken();
     if (isTokenValid(token)) {
-      navigate('/dashboard');
+      navigate('/home');
     }
   }, [navigate]);
 
@@ -49,7 +49,7 @@ export default function Login() {
       {
         loading: "Logging in...",
         success: () => {
-          setTimeout(() => navigate('/dashboard'), 300);
+          setTimeout(() => navigate('/home'), 300);
           return "Logged in successfully!";
         },
         error: (err: unknown) => {
