@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider"
-import Signup from "./pages/signup/Signup";
+import Signup from "./pages/auth/Signup";
+import Login from "./pages/auth/Login";
 
 
 
@@ -10,10 +11,12 @@ function App() {
       <Router>
         <Routes>
           {/* Default route */}
-          <Route path="/" element={<Navigate to="/signup" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
           {/* Actual routes */}
           <Route path="/signup" element={<Signup />} />
+
+          <Route path="/login" element={<Login />} />
         </Routes>
       </Router>
     </ThemeProvider>
