@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider"
-import Signup from "@/pages/public/auth/Signup";
-import Login from "./pages/auth/Login";
+import Signup from "./pages/public/signup/Signup";
+import Login from "./pages/public/login/Login";
 import HomePage from "./pages/private/HomePage/HomePage";
 import StudyTeams from "@/pages/private/Teams/StudyTeams";
 import SharedResources from "./pages/private/SharedResources/SharedResources";
