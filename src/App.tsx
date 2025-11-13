@@ -10,6 +10,8 @@ import Friends from "./pages/private/Friends/Friends";
 import Settings from "./pages/private/Settings/Settings";
 import AddFriends from "./pages/private/AddFriends/AddFriends";
 import EditAccountInfo from "./pages/private/EditAccountInfo/EditAccountInfo";
+import PrivateRoutes from "./utils/PrivateRoutes";
+import AuthRoutes from "./utils/AuthRoutes";
 
 function App() {
   return (
@@ -19,17 +21,24 @@ function App() {
           {/* Default route */}
           <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Actual routes */}
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/study-teams" element={<StudyTeams />} />
-          <Route path="/shared-resources" element={<SharedResources />} />
-          <Route path="/track-progress" element={<TrackProgress />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/add-friends" element={<AddFriends />} />
-          <Route path="/edit-account-info" element={<EditAccountInfo />} />
-          <Route path="/login" element={<Login />} />
+          {/* Auth routes */}
+          <Route element={<AuthRoutes defaultRoute="/home" />}>
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+          </Route>
+
+          {/* Private routes */}
+          <Route element={<PrivateRoutes defaultRoute="/login" />}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/study-teams" element={<StudyTeams />} />
+            <Route path="/shared-resources" element={<SharedResources />} />
+            <Route path="/track-progress" element={<TrackProgress />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/add-friends" element={<AddFriends />} />
+            <Route path="/edit-account-info" element={<EditAccountInfo />} />
+          </Route>
+
         </Routes>
       </Router>
     </ThemeProvider>
