@@ -11,6 +11,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { ModelTopicOfInterest, type DtoSignUpUserResponse } from "@/api";
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
+import logo from "@/assets/logo.png";
 
 const formSchema = z.object({
   firstName : z.string()
@@ -276,6 +277,9 @@ export default function Signup() {
         <div className="hidden md:flex w-px bg-gray-300 mx-4"/>
 
         <CardContent className="hidden md:flex flex-col justify-center min-w-fit w-xs">
+          <div className="flex justify-center mb-4">
+            <img src={logo} alt="StudyFlow Logo" className="w-24 h-24" />
+          </div>
           <CardHeader className="text-center mb-3">
             <CardTitle>Create your StudyFlow Account!</CardTitle>
             <CardDescription>Sign up to get started</CardDescription>
