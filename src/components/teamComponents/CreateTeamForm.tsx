@@ -3,51 +3,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { DialogClose } from "@/components/ui/dialog"
-import {Configuration, DefaultApi} from "@/api";
-import {type teamProps} from "@/components/teamComponents/teamProps"
-import {getStoredToken} from "@/services/react-query/auth.ts";
+import {useAddTeam} from "@/services/react-query/teams.ts";
+import { ModelTopicOfInterest } from "@/api";
 import {useAuthStore} from "@/services/stores/useAuthStore.ts";
-import { toast } from "sonner";
 
 
-export default function CreateTeamForm({ onTeamCreated }: teamProps) {
+
+
+export default function CreateTeamForm() {
     const [teamName, setTeamName] = useState("")
     const [subject, setSubject] = useState("")
     const [teamDescription, setDescription] = useState("")
-    const token = getStoredToken();
-    const user = useAuthStore.getState().getStoredUser();
-    const api = new DefaultApi(
-        new Configuration({
-            basePath: "/api",
-            baseOptions: {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            }
-        })
-    );
+    const {user} = useAuthStore();
+    const { mutate: addTeam, isPending } = useAddTeam();
 
-    const handleAddTeam = async () => {
-        try {
-            if (!user || !user.id) {
-                toast.error("User not logged in.");
-                return;
-            }
-            const request = {
-                name: teamName,
-                description: teamDescription,
-                ispublic: true,
-                users: [user.id]
-            };
-            const response = await api.teamsPost(request);
-            console.log("Team created:", response.data);
-            toast.success("Team created successfully!");
-            onTeamCreated?.()
-        } catch (error) {
-            console.error("Error creating team:", error);
-            toast.error("Failed to create team.");
-        }
-    };
 
 
     return (
@@ -72,16 +41,25 @@ export default function CreateTeamForm({ onTeamCreated }: teamProps) {
             </div>
 
             {/* Subject */}
-            <div className={"space-y-3.5"}>
+            <div className="space-y-3.5">
                 <Label htmlFor="subject">Subject</Label>
-                <Input
+
+                <select
                     id="subject"
                     value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Enter subject"
-                    className="bg-neutral-900 border-gray-700 text-white"
-                />
+                    onChange={(e) => setSubject(e.target.value as ModelTopicOfInterest)}
+                    className="bg-neutral-900 border-gray-700 text-white rounded p-2 w-full"
+                >
+                    <option value="">Select subject...</option>
+
+                    {Object.values(ModelTopicOfInterest).map((topic) => (
+                        <option key={topic} value={topic}>
+                            {topic}
+                        </option>
+                    ))}
+                </select>
             </div>
+
 
             {/* Description */}
             <div className="space-y-3.5">
@@ -103,8 +81,18 @@ export default function CreateTeamForm({ onTeamCreated }: teamProps) {
                         Cancel
                     </Button>
                 </DialogClose>
-                <Button type = "button" variant = "secondary" className="flex-1 h-10 bg-neutral-700 hover:bg-neutral-600 text-white font-medium"
-                        onClick={handleAddTeam}>
+                <Button
+                    disabled={isPending}
+                    type = "button" variant = "secondary" className="flex-1 h-10 bg-neutral-700 hover:bg-neutral-600 text-white font-medium"
+                        onClick={() => {
+                            addTeam({
+                                name: teamName,
+                                ispublic: true,
+                                description: teamDescription,
+                                teamtopic: subject as ModelTopicOfInterest,
+                                userid: user?.id
+                            });
+                        }}>
                     Create Team
                 </Button>
             </div>

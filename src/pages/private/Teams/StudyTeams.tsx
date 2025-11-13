@@ -1,64 +1,31 @@
-import {DefaultApi, Configuration, type EntityTeam} from "@/api";
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import Navbar from "@/components/teamComponents/NavBar"
 import {TeamCard} from "@/components/teamComponents/TeamCard"
 import { Button } from "@/components/ui/button"
 import {Dialog, DialogTrigger, DialogContent} from "@/components/ui/dialog"
 import CreateTeamForm from "@/components/teamComponents/CreateTeamForm";
-import {getStoredToken} from "@/services/react-query/auth.ts";
 import {useAuthStore} from "@/services/stores/useAuthStore.ts";
 import SearchTeamForm from "@/components/teamComponents/SearchTeamForm.tsx";
 import {Search} from "lucide-react";
+import {useTeamStore} from "@/services/stores/useTeamStore.ts";
+import {useGetTeams} from "@/services/react-query/teams.ts";
 
 export default function StudyTeams() {
-    const token = getStoredToken();
-    const user = useAuthStore.getState().getStoredUser();
-
-    const api = new DefaultApi(
-        new Configuration({
-            basePath: "/api",
-            baseOptions: {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
-            },
-        })
-    );
-
-    const [userTeams, setUserTeams] = useState<EntityTeam[]>([]);
-    const [teams, setTeams] = useState<EntityTeam[]>([]);
-    const fetchTeams = () => {
-        api.teamsGet()
-            .then((res) => {
-                setTeams(res.data);
-            })
-            .catch((err) => {
-                console.error("Eroare la preluarea echipelor:", err);
-            });
-    }
-
-
-    const fetchUserTeams = () => {
-        api.teamsGet()
-            .then((res) => {
-                if (!user || !user.id) {
-                    console.error("User not logged in or missing id");
-                    return;
-                }
-                const filteredTeams = res.data.filter(team =>
-                    team.users?.includes(String(user.id))
-                );
-                setUserTeams(filteredTeams);
-            })
-            .catch((err) => {
-                console.error("Eroare la preluarea echipelor:", err);
-            });
-    }
+    const {user} = useAuthStore();
+    const {teams} = useTeamStore();
+    const {mutate: getTeams, isPending} = useGetTeams();
 
     useEffect(() => {
-        fetchUserTeams()
-        fetchTeams()
+        getTeams();
     }, []);
+
+    if (isPending) {
+        return (
+            <div className="min-h-screen bg-neutral-900 text-white flex items-center justify-center">
+                <p>Loading teams...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-neutral-900 text-white">
@@ -73,7 +40,6 @@ export default function StudyTeams() {
                         </p>
                     </div>
 
-                    {/* GRUPARE BUTOANE */}
                     <div className="flex items-center gap-4">
                         <Dialog>
                             <DialogTrigger asChild>
@@ -93,17 +59,20 @@ export default function StudyTeams() {
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
-                                <CreateTeamForm onTeamCreated={fetchTeams} />
+                                <CreateTeamForm />
                             </DialogContent>
                         </Dialog>
                     </div>
                 </div>
 
-                {/* Grid cu echipe */}
+                {/* GRID CU ECHIPE */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {userTeams.map((team) => (
-                        <TeamCard key={team.id} team={team} />
-                    ))}
+                    {teams
+                        .filter(team => team.users?.includes(user?.id ?? ""))
+                        .map(team => (
+                            <TeamCard key={team.id} team={team} />
+                        ))
+                    }
                 </div>
             </div>
         </div>
