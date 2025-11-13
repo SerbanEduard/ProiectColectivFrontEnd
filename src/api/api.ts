@@ -23,10 +23,6 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
-export interface DtoAddUserToTeamRequest {
-    'teamId': string;
-    'userId': string;
-}
 export interface DtoLoginRequest {
     'email'?: string;
     'password'?: string;
@@ -55,12 +51,11 @@ export interface DtoTeamRequest {
     'description'?: string;
     'ispublic'?: boolean;
     'name'?: string;
+    'teamtopic'?: ModelTopicOfInterest;
+    'userid'?: string;
 }
-export interface DtoTeamResponse {
-    'description'?: string;
-    'ispublic'?: boolean;
-    'name'?: string;
-}
+
+
 export interface DtoUpdateStatisticsRequest {
     'teamId'?: string;
     'timeSpentOnApp'?: number;
@@ -81,13 +76,20 @@ export interface DtoUserResponse {
     'topicsOfInterest'?: Array<ModelTopicOfInterest>;
     'username'?: string;
 }
+export interface DtoUserToTeamRequest {
+    'teamId': string;
+    'userId': string;
+}
 export interface EntityTeam {
     'description'?: string;
     'id'?: string;
     'ispublic'?: boolean;
     'name'?: string;
+    'teamtopic'?: ModelTopicOfInterest;
     'users'?: Array<string>;
 }
+
+
 export interface EntityUser {
     'email'?: string;
     'firstname'?: string;
@@ -131,13 +133,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Add a user to a team by providing user ID and team ID
          * @summary Add a user to a team
-         * @param {DtoAddUserToTeamRequest} request User ID and Team ID
+         * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        teamsAddUserToTeamPost: async (request: DtoAddUserToTeamRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        teamsAddUserToTeamPut: async (request: DtoUserToTeamRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'request' is not null or undefined
-            assertParamExists('teamsAddUserToTeamPost', 'request', request)
+            assertParamExists('teamsAddUserToTeamPut', 'request', request)
             const localVarPath = `/teams/addUserToTeam`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -146,7 +148,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -195,6 +197,42 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Delete a user from a team by providing the user ID and team ID
+         * @summary Delete a user from a team
+         * @param {DtoUserToTeamRequest} request User ID and Team ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        teamsDeleteUserFromTeamDelete: async (request: DtoUserToTeamRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'request' is not null or undefined
+            assertParamExists('teamsDeleteUserFromTeamDelete', 'request', request)
+            const localVarPath = `/teams/deleteUserFromTeam`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(request, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -519,6 +557,46 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary Update a user
+         * @param {string} id The user\&#39;s ID
+         * @param {EntityUser} user The updated user
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdPut: async (id: string, user: EntityUser, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('usersIdPut', 'id', id)
+            // verify required parameter 'user' is not null or undefined
+            assertParamExists('usersIdPut', 'user', user)
+            const localVarPath = `/users/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(user, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Update user statistics
          * @param {string} id The user\&#39;s ID
          * @param {DtoUpdateStatisticsRequest} request The statistics update request
@@ -723,14 +801,14 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         /**
          * Add a user to a team by providing user ID and team ID
          * @summary Add a user to a team
-         * @param {DtoAddUserToTeamRequest} request User ID and Team ID
+         * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async teamsAddUserToTeamPost(request: DtoAddUserToTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.teamsAddUserToTeamPost(request, options);
+        async teamsAddUserToTeamPut(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.teamsAddUserToTeamPut(request, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.teamsAddUserToTeamPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.teamsAddUserToTeamPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -744,6 +822,19 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.teamsByNameGet(name, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.teamsByNameGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Delete a user from a team by providing the user ID and team ID
+         * @summary Delete a user from a team
+         * @param {DtoUserToTeamRequest} request User ID and Team ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async teamsDeleteUserFromTeamDelete(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.teamsDeleteUserFromTeamDelete(request, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.teamsDeleteUserFromTeamDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -805,7 +896,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async teamsPost(request: DtoTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoTeamResponse>> {
+        async teamsPost(request: DtoTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EntityTeam>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.teamsPost(request, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.teamsPost']?.[localVarOperationServerIndex]?.url;
@@ -861,6 +952,20 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update a user
+         * @param {string} id The user\&#39;s ID
+         * @param {EntityUser} user The updated user
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async usersIdPut(id: string, user: EntityUser, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EntityUser>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdPut(id, user, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -943,12 +1048,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         /**
          * Add a user to a team by providing user ID and team ID
          * @summary Add a user to a team
-         * @param {DtoAddUserToTeamRequest} request User ID and Team ID
+         * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        teamsAddUserToTeamPost(request: DtoAddUserToTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
-            return localVarFp.teamsAddUserToTeamPost(request, options).then((request) => request(axios, basePath));
+        teamsAddUserToTeamPut(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+            return localVarFp.teamsAddUserToTeamPut(request, options).then((request) => request(axios, basePath));
         },
         /**
          * Get a list of teams that match the specified name
@@ -959,6 +1064,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         teamsByNameGet(name: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<EntityTeam>> {
             return localVarFp.teamsByNameGet(name, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Delete a user from a team by providing the user ID and team ID
+         * @summary Delete a user from a team
+         * @param {DtoUserToTeamRequest} request User ID and Team ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        teamsDeleteUserFromTeamDelete(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+            return localVarFp.teamsDeleteUserFromTeamDelete(request, options).then((request) => request(axios, basePath));
         },
         /**
          * Get a list of all teams
@@ -1007,7 +1122,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        teamsPost(request: DtoTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<DtoTeamResponse> {
+        teamsPost(request: DtoTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<EntityTeam> {
             return localVarFp.teamsPost(request, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1049,6 +1164,17 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         usersIdGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<EntityUser> {
             return localVarFp.usersIdGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update a user
+         * @param {string} id The user\&#39;s ID
+         * @param {EntityUser} user The updated user
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdPut(id: string, user: EntityUser, options?: RawAxiosRequestConfig): AxiosPromise<EntityUser> {
+            return localVarFp.usersIdPut(id, user, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1113,12 +1239,12 @@ export class DefaultApi extends BaseAPI {
     /**
      * Add a user to a team by providing user ID and team ID
      * @summary Add a user to a team
-     * @param {DtoAddUserToTeamRequest} request User ID and Team ID
+     * @param {DtoUserToTeamRequest} request User ID and Team ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public teamsAddUserToTeamPost(request: DtoAddUserToTeamRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).teamsAddUserToTeamPost(request, options).then((request) => request(this.axios, this.basePath));
+    public teamsAddUserToTeamPut(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).teamsAddUserToTeamPut(request, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1130,6 +1256,17 @@ export class DefaultApi extends BaseAPI {
      */
     public teamsByNameGet(name: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).teamsByNameGet(name, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Delete a user from a team by providing the user ID and team ID
+     * @summary Delete a user from a team
+     * @param {DtoUserToTeamRequest} request User ID and Team ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public teamsDeleteUserFromTeamDelete(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).teamsDeleteUserFromTeamDelete(request, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1229,6 +1366,18 @@ export class DefaultApi extends BaseAPI {
      */
     public usersIdGet(id: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).usersIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update a user
+     * @param {string} id The user\&#39;s ID
+     * @param {EntityUser} user The updated user
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public usersIdPut(id: string, user: EntityUser, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).usersIdPut(id, user, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

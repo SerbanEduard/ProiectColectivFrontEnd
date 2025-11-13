@@ -4,8 +4,9 @@ All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**teamsAddUserToTeamPost**](#teamsaddusertoteampost) | **POST** /teams/addUserToTeam | Add a user to a team|
+|[**teamsAddUserToTeamPut**](#teamsaddusertoteamput) | **PUT** /teams/addUserToTeam | Add a user to a team|
 |[**teamsByNameGet**](#teamsbynameget) | **GET** /teams/by-name | Get teams by name|
+|[**teamsDeleteUserFromTeamDelete**](#teamsdeleteuserfromteamdelete) | **DELETE** /teams/deleteUserFromTeam | Delete a user from a team|
 |[**teamsGet**](#teamsget) | **GET** /teams | Get all teams|
 |[**teamsIdDelete**](#teamsiddelete) | **DELETE** /teams/{id} | Delete a team|
 |[**teamsIdGet**](#teamsidget) | **GET** /teams/{id} | Get a team by ID|
@@ -15,14 +16,15 @@ All URIs are relative to *http://localhost*
 |[**usersGet**](#usersget) | **GET** /users | Get all users|
 |[**usersIdDelete**](#usersiddelete) | **DELETE** /users/{id} | Delete a user|
 |[**usersIdGet**](#usersidget) | **GET** /users/{id} | Get a user by ID|
+|[**usersIdPut**](#usersidput) | **PUT** /users/{id} | Update a user|
 |[**usersIdStatisticsPut**](#usersidstatisticsput) | **PUT** /users/{id}/statistics | Update user statistics|
 |[**usersLoginPost**](#usersloginpost) | **POST** /users/login | Login user by email or username and return JWT|
 |[**usersSignupPost**](#userssignuppost) | **POST** /users/signup | Register a new user|
 |[**voiceTeamIdGet**](#voiceteamidget) | **GET** /voice/{teamId} | Join voice chat room|
 |[**voiceTeamIdLeaveDelete**](#voiceteamidleavedelete) | **DELETE** /voice/{teamId}/leave | Leave voice chat room|
 
-# **teamsAddUserToTeamPost**
-> { [key: string]: any; } teamsAddUserToTeamPost(request)
+# **teamsAddUserToTeamPut**
+> { [key: string]: any; } teamsAddUserToTeamPut(request)
 
 Add a user to a team by providing user ID and team ID
 
@@ -32,15 +34,15 @@ Add a user to a team by providing user ID and team ID
 import {
     DefaultApi,
     Configuration,
-    DtoAddUserToTeamRequest
+    DtoUserToTeamRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new DefaultApi(configuration);
 
-let request: DtoAddUserToTeamRequest; //User ID and Team ID
+let request: DtoUserToTeamRequest; //User ID and Team ID
 
-const { status, data } = await apiInstance.teamsAddUserToTeamPost(
+const { status, data } = await apiInstance.teamsAddUserToTeamPut(
     request
 );
 ```
@@ -49,7 +51,7 @@ const { status, data } = await apiInstance.teamsAddUserToTeamPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **request** | **DtoAddUserToTeamRequest**| User ID and Team ID | |
+| **request** | **DtoUserToTeamRequest**| User ID and Team ID | |
 
 
 ### Return type
@@ -124,6 +126,59 @@ No authorization required
 |**200** | OK |  -  |
 |**400** | Bad Request: Missing \&#39;name\&#39; query parameter |  -  |
 |**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **teamsDeleteUserFromTeamDelete**
+> { [key: string]: any; } teamsDeleteUserFromTeamDelete(request)
+
+Delete a user from a team by providing the user ID and team ID
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    DtoUserToTeamRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let request: DtoUserToTeamRequest; //User ID and Team ID
+
+const { status, data } = await apiInstance.teamsDeleteUserFromTeamDelete(
+    request
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **request** | **DtoUserToTeamRequest**| User ID and Team ID | |
+
+
+### Return type
+
+**{ [key: string]: any; }**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | User deleted from team |  -  |
+|**400** | Bad Request: Invalid request body or missing userId or teamId |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -335,7 +390,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **teamsPost**
-> DtoTeamResponse teamsPost(request)
+> EntityTeam teamsPost(request)
 
 Create a new team with the provided details
 
@@ -367,7 +422,7 @@ const { status, data } = await apiInstance.teamsPost(
 
 ### Return type
 
-**DtoTeamResponse**
+**EntityTeam**
 
 ### Authorization
 
@@ -587,6 +642,63 @@ No authorization required
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
 |**404** | Not Found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **usersIdPut**
+> EntityUser usersIdPut(user)
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    EntityUser
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //The user\'s ID (default to undefined)
+let user: EntityUser; //The updated user
+
+const { status, data } = await apiInstance.usersIdPut(
+    id,
+    user
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **user** | **EntityUser**| The updated user | |
+| **id** | [**string**] | The user\&#39;s ID | defaults to undefined|
+
+
+### Return type
+
+**EntityUser**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | User not found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

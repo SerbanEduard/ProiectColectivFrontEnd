@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **id** | **string** |  | [optional] [default to undefined]
 **ispublic** | **boolean** |  | [optional] [default to undefined]
 **name** | **string** |  | [optional] [default to undefined]
+**teamtopic** | [**ModelTopicOfInterest**](ModelTopicOfInterest.md) |  | [optional] [default to undefined]
 **users** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 
 ## Example
@@ -21,6 +22,7 @@ const instance: EntityTeam = {
     id,
     ispublic,
     name,
+    teamtopic,
     users,
 };
 ```

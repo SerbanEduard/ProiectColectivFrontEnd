@@ -8,6 +8,8 @@ Name | Type | Description | Notes
 **description** | **string** |  | [optional] [default to undefined]
 **ispublic** | **boolean** |  | [optional] [default to undefined]
 **name** | **string** |  | [optional] [default to undefined]
+**teamtopic** | [**ModelTopicOfInterest**](ModelTopicOfInterest.md) |  | [optional] [default to undefined]
+**userid** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -18,6 +20,8 @@ const instance: DtoTeamRequest = {
     description,
     ispublic,
     name,
+    teamtopic,
+    userid,
 };
 ```
 
