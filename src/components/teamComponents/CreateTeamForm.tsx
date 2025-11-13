@@ -5,7 +5,8 @@ import { useState } from "react"
 import { DialogClose } from "@/components/ui/dialog"
 import {Configuration, DefaultApi} from "@/api";
 import {type teamProps} from "@/components/teamComponents/teamProps"
-import {getStoredToken, getStoredUser} from "@/services/react-query/auth.ts";
+import {getStoredToken} from "@/services/react-query/auth.ts";
+import {useAuthStore} from "@/services/stores/useAuthStore.ts";
 import { toast } from "sonner";
 
 
@@ -14,7 +15,7 @@ export default function CreateTeamForm({ onTeamCreated }: teamProps) {
     const [subject, setSubject] = useState("")
     const [teamDescription, setDescription] = useState("")
     const token = getStoredToken();
-    const user = getStoredUser();
+    const user = useAuthStore.getState().getStoredUser();
     const api = new DefaultApi(
         new Configuration({
             basePath: "/api",
