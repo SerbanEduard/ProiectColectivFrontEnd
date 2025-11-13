@@ -1,7 +1,8 @@
-import { GraduationCap, Users, UserPlus, Settings, BookOpen, TrendingUp } from "lucide-react";
+import { Users, UserPlus, Settings, BookOpen, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo-clean.png";
 
 export default function HomePage() {
   return (
@@ -10,7 +11,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <GraduationCap className="size-8 text-[#B8860B]" />
+              <img src={logo} alt="StudyFlow logo" className="h-8 w-auto" />
               <h1 className="text-2xl font-bold text-foreground">StudyFlow</h1>
             </div>
           </div>
