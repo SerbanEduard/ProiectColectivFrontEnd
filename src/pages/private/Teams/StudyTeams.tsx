@@ -5,19 +5,21 @@ import {TeamCard} from "@/components/teamComponents/TeamCard"
 import { Button } from "@/components/ui/button"
 import {Dialog, DialogTrigger, DialogContent} from "@/components/ui/dialog"
 import CreateTeamForm from "@/components/teamComponents/CreateTeamForm";
-import {getStoredToken, getStoredUser} from "@/services/react-query/auth.ts";
+import {getStoredToken} from "@/services/react-query/auth.ts";
+import {useAuthStore} from "@/services/stores/useAuthStore.ts";
 import SearchTeamForm from "@/components/teamComponents/SearchTeamForm.tsx";
 import {Search} from "lucide-react";
 
 export default function StudyTeams() {
     const token = getStoredToken();
-    const user = getStoredUser();
+    const user = useAuthStore.getState().getStoredUser();
+
     const api = new DefaultApi(
         new Configuration({
             basePath: "/api",
             baseOptions: {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`
                 },
             },
         })
@@ -44,7 +46,7 @@ export default function StudyTeams() {
                     return;
                 }
                 const filteredTeams = res.data.filter(team =>
-                    team.users?.includes(user.id)
+                    team.users?.includes(String(user.id))
                 );
                 setUserTeams(filteredTeams);
             })

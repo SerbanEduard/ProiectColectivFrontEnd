@@ -69,22 +69,5 @@ export const isTokenValid = (token?: string) => {
   }
 };
 
-//Helper: Get the logged user data
-export const getStoredUser = () => {
-  const authStore = useAuthStore.getState();
-
-  if (authStore.user) return authStore.user;
-
-  try {
-    const raw = localStorage.getItem('auth_user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      authStore.setUser(user);
-      return user;
-    }
-  } catch { return undefined;}
-
-  return null;
-};
 
 
