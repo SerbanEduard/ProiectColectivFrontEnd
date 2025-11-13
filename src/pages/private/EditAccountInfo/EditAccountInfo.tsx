@@ -9,6 +9,7 @@ import * as z from "zod";
 import { ModelTopicOfInterest } from "@/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import logo from "@/assets/logo.png";
+import { useAuthStore } from "@/services/stores/useAuthStore";
 
 const formSchema = z.object({
   firstName : z.string()
@@ -37,27 +38,18 @@ const formSchema = z.object({
 });
 
 export default function EditAccountInfo() {
-  // Mock user data
-  const mockData = {
-    firstName: "John",
-    lastName: "Smith",
-    "username": "johnsmith",
-    email: "example@email.com",
-    password: "********",
-    checkPassword: "********",
-    favoriteTopic: "Mathematics",
-  };
+  const loggedUser = useAuthStore().user;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-    firstName: "John",
-    lastName: "Smith",
-    "username": "johnsmith",
-    email: "example@email.com",
-    password: "********",
-    checkPassword: "********",
-    favoriteTopic: [],
+    firstName: loggedUser?.firstname ?? "",
+    lastName: loggedUser?.lastname ?? "",
+    username: loggedUser?.username ?? "",
+    email: loggedUser?.email ?? "",
+    password: "",
+    checkPassword: "",
+    favoriteTopic: loggedUser?.topicsOfInterest ?? [],
     }
   });
 
