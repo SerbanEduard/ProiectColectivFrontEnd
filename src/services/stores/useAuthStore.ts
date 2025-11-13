@@ -10,12 +10,30 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: undefined,
-  token: undefined,
+export const useAuthStore = create<AuthState>((set) => {
+  const localToken: string | undefined= localStorage.getItem('auth_token') || undefined;
+  let userLogged: DtoUserResponse | undefined = undefined;
 
-  setToken: (t) => set({ token: t }),
-  
-  setUser: (u) => set({ user: u }),
-  logout: () => set({ user: undefined, token: undefined }),
-}));
+  try {
+    const raw = localStorage.getItem('auth_user');
+    if (raw) userLogged = JSON.parse(raw);
+  } catch {
+    userLogged = undefined;
+  }
+
+  return {
+    user: userLogged,
+    token: localToken,
+
+    setToken: (t) => {
+      localStorage.setItem('auth_token', t);
+      set({ token: t });
+    },
+
+    setUser: (u) => {
+      localStorage.setItem('auth_user', JSON.stringify(u));
+      set({user: u});
+    },
+
+    logout: () => set({ user: undefined, token: undefined }),
+}});

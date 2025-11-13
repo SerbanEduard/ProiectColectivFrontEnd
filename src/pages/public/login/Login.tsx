@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import * as z from "zod";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import logo from "@/assets/logo.png";
 import { useNavigate } from "react-router-dom";
-import { useLogin, isTokenValid, getStoredToken } from "@/services/react-query/auth";
+import { useLogin } from "@/services/react-query/auth";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -29,14 +28,6 @@ export default function Login() {
   });
 
   const { mutateAsync: loginAsync, isPending } = useLogin();
-
-  // If a valid token already exists, redirect away from login
-  useEffect(() => {
-    const token = getStoredToken();
-    if (isTokenValid(token)) {
-      navigate('/home');
-    }
-  }, [navigate]);
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     const { usernameOrEmail, password } = values;
