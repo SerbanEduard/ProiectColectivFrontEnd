@@ -3,24 +3,34 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
+import { Label } from "@/components/ui/label";
+import { Controller, useForm } from "react-hook-form"
 import * as z from "zod";
 import { ModelTopicOfInterest } from "@/api";
+import { zodResolver } from "@hookform/resolvers/zod";
+import logo from "@/assets/logo.png";
 
 const formSchema = z.object({
   firstName : z.string()
-    .min(1,"First name must not be empty")
-    .max(60,"First name can't be more than 60 characters"),
+            .min(1,"First name must not be empty")
+            .max(60,"First name can't be more than 60 characters"),
+
   lastName: z.string()
-    .min(1,"Last name must not be empty")
-    .max(60,"Last name can't be more than 60 characters"),
+            .min(1,"Last name must not be empty")
+            .max(60,"Last name can't be more than 60 characters"),
+
   username: z.string()
-    .min(1,"Username must not be empty")
-    .max(60,"Username can't be more than 60 characters"),
+            .min(1,"Username must not be empty")
+            .max(60,"Username can't be more than 60 characters"),
+
   password: z.string()
-    .min(6,"Password must be at least 6 characters long"),
+            .min(6,"Password must be at least 6 characters long"),
+
   checkPassword: z.string(),
-  email: z.string().email("Email is not valid!"),
-  favoriteTopic: z.string().min(1, "Favorite topic required!"),
+
+  email: z.email("Email is not valid!"),
+
+  favoriteTopic: z.array(z.string()),
 }).refine(data => data.password === data.checkPassword, {
   message: "Passwords must match!",
   path: ["checkPassword"],
@@ -38,7 +48,24 @@ export default function EditAccountInfo() {
     favoriteTopic: "Mathematics",
   };
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+    firstName: "John",
+    lastName: "Smith",
+    "username": "johnsmith",
+    email: "example@email.com",
+    password: "********",
+    checkPassword: "********",
+    favoriteTopic: [],
+    }
+  });
+
   const topicList = Object.values(ModelTopicOfInterest);
+
+  const handleUpdate = async () => {
+    // Handle form submission logic here
+  }
 
   // No form logic, just filled fields
   return (
@@ -50,68 +77,140 @@ export default function EditAccountInfo() {
             <CardDescription>Edit your data below</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col mt-4 justify-center w-100">
-            <form className="flex flex-col gap-y-4">
+            <form className="flex flex-col gap-y-4" onSubmit={form.handleSubmit(handleUpdate)}>
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="firstName">First name</FieldLabel>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    defaultValue={mockData.firstName}
-                  />
+                <Controller
+                  name="firstName"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>First name</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="John"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="lastName"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Last name</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Smith"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="username"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="johnsmith"
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="password"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type="password"
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="checkPassword"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Check password</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type="password"
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  name="email"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>E-mail</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type="email"
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                    </Field>
+                  )}
+                />
+
+                <Field className="m-6 mb-10">
+                  <FieldLabel className="mb-2">Your favorite topics</FieldLabel>
+                    <div className="grid grid-cols-3 gap-2">
+                      {topicList.map((topic) => {
+                        const selected = form.watch("favoriteTopic").includes(topic);
+                        return (
+                          <div key={topic} className="flex flex-col justify-center w-10 align-middle text-center items-center">
+                            <Button
+                              className="rounded-full border"
+                              key={topic}
+                              type="button"
+                              variant={selected ? "default" : "outline"}
+                              onClick={() => {
+                                const topics = form.getValues("favoriteTopic");
+                                form.setValue(
+                                  "favoriteTopic",
+                                  selected ? topics.filter((t) => t !== topic) : [...topics, topic]
+                                );
+                              }}
+                            >
+                            </Button>
+                            <Label>
+                              {topic}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
                 </Field>
-                <Field>
-                  <FieldLabel htmlFor="lastName">Last name</FieldLabel>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    defaultValue={mockData.lastName}
-                  />
-                </Field>
-                <Field> {/* <-- NOU */}
-                  <FieldLabel htmlFor="username">Username</FieldLabel>
-                  <Input
-                    id="username"
-                    name="username"
-                    defaultValue={mockData.username}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    defaultValue={mockData.password}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="checkPassword">Check password</FieldLabel>
-                  <Input
-                    id="checkPassword"
-                    name="checkPassword"
-                    type="password"
-                    defaultValue={mockData.checkPassword}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="email">E-mail</FieldLabel>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    defaultValue={mockData.email}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="favoriteTopic">Favorite topic</FieldLabel>
-                  <Input
-                    id="favoriteTopic"
-                    name="favoriteTopic"
-                    type="text"
-                    defaultValue={mockData.favoriteTopic}
-                  />
-                </Field>
+
                 <Button type="submit" className="w-1/2 self-center mt-6">
                   Save changes
                 </Button>
@@ -121,6 +220,9 @@ export default function EditAccountInfo() {
         </CardContent>
         <div className="hidden md:flex w-px bg-gray-300 mx-4"/>
         <CardContent className="hidden md:flex flex-col justify-center min-w-fit w-xs">
+          <div className="flex justify-center mb-4">
+            <img src={logo} alt="StudyFlow Logo" className="w-24 h-24" />
+          </div>
           <CardHeader className="text-center mb-3">
             <CardTitle>Update your StudyFlow Account</CardTitle>
             <CardDescription>Edit your account data</CardDescription>
