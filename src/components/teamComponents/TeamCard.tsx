@@ -10,7 +10,7 @@ export function TeamCard({team}: {team: EntityTeam}) {
                 <div className="flex justify-between items-center">
                     <Users className="h-5 w-5" />
                     <span className="text-xs bg-gray-700 text-gray-200 px-2 py-0.5 rounded-md">
-            Mathematics
+            {team.teamtopic}
           </span>
                 </div>
 
