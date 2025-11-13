@@ -11,17 +11,14 @@ export const useSignup = () => {
 };
 
 export const useLogin = () => {
+  console.log("Login attempt");
   return useMutation<DtoLoginResponse, Error, DtoLoginRequest>({
     mutationFn: (data) => api.usersLoginPost(data).then(res => res.data),
     onSuccess: (data) => {
       if (!data) return;
       const auth = useAuthStore.getState();
       if (data.accessToken) auth.setToken(data.accessToken);
-      if (data.accessToken) {
-        try {
-          localStorage.setItem('auth_token', data.accessToken);
-        } catch {/* ignore quota errors */}
-      }
+
       if (data.user) auth.setUser(data.user);
     }
   });
