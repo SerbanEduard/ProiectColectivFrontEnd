@@ -25,7 +25,13 @@ export const useLogin = () => {
           localStorage.setItem('auth_token', data.accessToken);
         } catch {/* ignore quota errors */}
       }
-      if (data.user) auth.setUser(data.user);
+      if (data.user)
+      {
+        auth.setUser(data.user);
+        try {
+          localStorage.setItem('auth_user', JSON.stringify(data.user));
+        } catch {/* ignore quota errors */}
+      }
     }
   });
 };
@@ -61,6 +67,24 @@ export const isTokenValid = (token?: string) => {
   } catch {
     return false;
   }
+};
+
+//Helper: Get the logged user data
+export const getStoredUser = () => {
+  const authStore = useAuthStore.getState();
+
+  if (authStore.user) return authStore.user;
+
+  try {
+    const raw = localStorage.getItem('auth_user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      authStore.setUser(user);
+      return user;
+    }
+  } catch { return undefined;}
+
+  return null;
 };
 
 
