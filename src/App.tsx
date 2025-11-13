@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider"
-import Signup from "@/pages/public/signup/Signup";
+import Signup from "./pages/public/signup/Signup";
+import Login from "./pages/public/login/Login";
 import HomePage from "./pages/private/HomePage/HomePage";
 import StudyTeams from "@/pages/private/Teams/StudyTeams";
 import SharedResources from "./pages/private/SharedResources/SharedResources";
@@ -16,7 +17,7 @@ function App() {
       <Router>
         <Routes>
           {/* Default route */}
-          <Route path="/" element={<Navigate to="/signup" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
           {/* Actual routes */}
           <Route path="/signup" element={<Signup />} />
@@ -28,6 +29,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/add-friends" element={<AddFriends />} />
           <Route path="/edit-account-info" element={<EditAccountInfo />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </Router>
     </ThemeProvider>
