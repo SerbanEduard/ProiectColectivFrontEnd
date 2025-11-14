@@ -19,13 +19,6 @@ export const useLogin = () => {
       if (data.accessToken) auth.setToken(data.accessToken);
 
       if (data.user) auth.setUser(data.user);
-      if (data.user)
-      {
-        auth.setUser(data.user);
-        try {
-          localStorage.setItem('auth_user', JSON.stringify(data.user));
-        } catch {/* ignore quota errors */}
-      }
     }
   });
 };
