@@ -11,6 +11,8 @@ import Settings from "./pages/private/Settings/Settings";
 import AddFriends from "./pages/private/AddFriends/AddFriends";
 import PrivateRoutes from "./utils/PrivateRoutes";
 import AuthRoutes from "./utils/AuthRoutes";
+import TeamPage from "./pages/private/Teams/TeamPage";
+import { SidebarProvider } from "./components/ui/sidebar";
 
 function App() {
   return (
@@ -35,6 +37,7 @@ function App() {
             <Route path="/friends" element={<Friends />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/add-friends" element={<AddFriends />} />
+            <Route path="/teams/:teamId" element={<TeamPage />} />
           </Route>
 
         </Routes>
