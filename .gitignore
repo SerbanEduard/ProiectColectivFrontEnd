@@ -26,3 +26,7 @@ dist-ssr
 
 # Generated code by openApi
 api/
+
+# Environment folders
+.env.development
+.env.production

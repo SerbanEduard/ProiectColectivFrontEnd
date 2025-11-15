@@ -8,10 +8,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 
 import * as z from "zod"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { ModelTopicOfInterest, type DtoSignUpUserResponse } from "@/api";
+import { ModelTopicOfInterest } from "@/api";
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/logo.png";
+import chevronLeft from "@/assets/left-chevron.png";
+import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   firstName : z.string()
@@ -25,12 +27,12 @@ const formSchema = z.object({
   password: z.string()
             .min(6,"Password must be at least 6 characters long"),
   
-  checkPassword: z.string(),
+  confirmPassword: z.string(),
 
   email: z.email("Email is not valid!")
-}).refine(data => data.password === data.checkPassword, {
+}).refine(data => data.password === data.confirmPassword, {
   error:"Passwords must match!",
-  path:["checkPassword"]
+  path:["confirmPassword"]
 })
 
 const formSchema2 = z.object({
@@ -43,6 +45,7 @@ const formSchema2 = z.object({
 
 export default function Signup() {
   const [shownForm, setShownForm] = useState(1);
+  const navigate = useNavigate();
 
   const form1 = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,7 +53,7 @@ export default function Signup() {
       firstName: '',
       lastName: '',
       password: '',
-      checkPassword: '',
+      confirmPassword: '',
       email: ''
     },
   })
@@ -75,7 +78,7 @@ export default function Signup() {
     const form1Values = form1.getValues();
     const form2Values = form2.getValues();
 
-    await toast.promise<DtoSignUpUserResponse>(
+    await toast.promise(
       signupAsync({
         firstname: form1Values.firstName,
         lastname: form1Values.lastName,
@@ -86,7 +89,11 @@ export default function Signup() {
       }),
       {
         loading: "Creating account...",
-        success: "Account created successfully!",
+        success: () => {
+          navigate('/login');
+          return "Account created successfully!";
+
+        },
         error: (err: Error) => {
           return err.message || "Account could not be created";
         },
@@ -99,14 +106,23 @@ export default function Signup() {
       <Card className="relative flex flex-row p-6 mx-5 shadow-md min-h-fit min-w-fit">
         <CardContent>
           <div className="flex flex-row">
-          { shownForm == 2 &&
-            <Button className="absolute top-5 left-5"
-              variant={"outline"}
+          { shownForm == 2 && (
+            <Button
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-transparent hover:bg-transparent border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-xl font-medium h-90"
+              variant={"ghost"}
+              aria-label="Go back"
               onClick={() => setShownForm(1)}
             >
-              Back
+              <img
+                src={chevronLeft}
+                alt=""
+                aria-hidden
+                className="h-5 w-5 object-contain"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+              <span className="sr-only">Back</span>
             </Button>
-          }
+          )}
           <CardHeader className="text-center mb-3 w-full mx-10">
             <CardTitle className="mb-1">Create your StudyFlow Account!</CardTitle>
             <CardDescription>Sign up to get started</CardDescription>
@@ -151,6 +167,24 @@ export default function Signup() {
                       />
                   </div>
 
+                  <Controller
+                        name="email"
+                        control={form1.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor={field.name}>E-mail</FieldLabel>
+                            <Input
+                              {...field}
+                              id={field.name}
+                              aria-invalid={fieldState.invalid}
+                              placeholder="example@email.com"
+                              type="email"
+                            />
+                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          </Field>
+                        )}
+                      />
+
                   <div className="flex flex-row gap-x-4">
                     <Controller
                         name="password"
@@ -170,11 +204,11 @@ export default function Signup() {
                         )}
                       />
                     <Controller
-                        name="checkPassword"
+                        name="confirmPassword"
                         control={form1.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor={field.name}>Check password</FieldLabel>
+                            <FieldLabel htmlFor={field.name}>Confirm password</FieldLabel>
                             <Input
                               {...field}
                               id={field.name}
@@ -188,27 +222,20 @@ export default function Signup() {
                       />
                   </div>
 
-                  <Controller
-                        name="email"
-                        control={form1.control}
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor={field.name}>E-mail</FieldLabel>
-                            <Input
-                              {...field}
-                              id={field.name}
-                              aria-invalid={fieldState.invalid}
-                              placeholder="example@email.com"
-                              type="email"
-                            />
-                            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                          </Field>
-                        )}
-                      />
-
-                  <Button type="submit" className="w-1/2 self-center">
+                  <Button type="submit" className="w-1/2 self-center hover:cursor-pointer">
                     Continue
                   </Button>
+                  <div className="flex items-center justify-center gap-1 text-sm mt-4">
+                  <span className="text-muted-foreground">Already have an account?</span>
+                  <Button 
+                    type="button" 
+                    variant="link"
+                    className="p-0 h-auto font-normal hover:cursor-pointer"
+                    onClick={() => window.location.href = '/login'}
+                  >
+                    Log in
+                  </Button>
+                </div>
                 </FieldGroup>
               </form>
             </CardContent>
@@ -264,9 +291,21 @@ export default function Signup() {
                       })}
                     </div>
                 </Field>
-                <Button type="submit" className="w-1/2 self-center">
+                <Button type="submit" className="w-1/2 self-center hover:cursor-pointer">
                   Sign Up
                 </Button>
+
+                <div className="flex items-center justify-center gap-1 text-sm mt-4">
+                  <span className="text-muted-foreground">Already have an account?</span>
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="p-0 h-auto font-normal hover:cursor-pointer"
+                    onClick={() => window.location.href = '/login'}
+                  >
+                    Log in
+                  </Button>
+                </div>
               </form>
             </CardContent>
           }
