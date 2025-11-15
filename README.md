@@ -114,6 +114,8 @@ https://tweakcn.com/editor/theme
 
 Tailwind is a way of styling , it is inline code , for and example on how its used you can see the Signup.tsx folder with the component
 
+# Environment
 
+For development you need a .env.development folder in the source folder
 
 

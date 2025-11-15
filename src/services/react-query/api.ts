@@ -2,8 +2,11 @@ import { DefaultApi, Configuration } from "@/api";
 import axios from "axios";
 import { useAuthStore } from "../stores/useAuthStore";
 
+//din .env.development
+const BASE_PATH = import.meta.env.VITE_BASEPATH;
+
 const axiosInstance = axios.create({
-  baseURL: "/api",
+  baseURL: BASE_PATH,
 });
 
 // Add a request interceptor
@@ -16,7 +19,7 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 export const api = new DefaultApi(
-    new Configuration({ basePath: '/api' }),
+    new Configuration({ basePath: BASE_PATH }),
     undefined,
     axiosInstance
 );
