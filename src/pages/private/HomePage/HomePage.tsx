@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo-clean.png";
+import { useAuthStore } from "@/services/stores/useAuthStore";
 
 export default function HomePage() {
+  const logoutFunction = useAuthStore((state) => state.logout);
+  
   return (
     <div className="min-h-screen bg-background">
       <header className="w-full px-6 py-4 border-b border-border">
@@ -29,12 +32,18 @@ export default function HomePage() {
                 <span>Friends</span>
               </Button>
             </Link>
-            <Link to="/settings">
+            <Link to="/edit-account-info">
               <Button variant="ghost" className="flex items-center gap-2">
                 <Settings className="size-5" />
                 <span>Settings</span>
               </Button>
             </Link>
+            <Button variant = "ghost" className="flex items-center gap-2" onClick={() => {
+              logoutFunction();
+              window.location.href = '/login';
+            }}>
+              <span>Logout</span>
+            </Button>
           </nav>
         </div>
       </header>
