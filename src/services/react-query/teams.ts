@@ -36,7 +36,7 @@ export const useJoinTeam = () => {
     return useMutation<EntityTeam, Error, { teamId: string; userId: string }>(
         {
             mutationFn: ({ teamId, userId }) =>
-                api.teamsAddUserToTeamPut({
+                api.teamsUsersPut({
                     teamId,
                     userId
                 }).then(res => res.data),
