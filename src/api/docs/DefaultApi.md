@@ -4,15 +4,13 @@ All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**teamsAddUserToTeamPut**](#teamsaddusertoteamput) | **PUT** /teams/addUserToTeam | Add a user to a team|
-|[**teamsByNameGet**](#teamsbynameget) | **GET** /teams/by-name | Get teams by name|
-|[**teamsDeleteUserFromTeamDelete**](#teamsdeleteuserfromteamdelete) | **DELETE** /teams/deleteUserFromTeam | Delete a user from a team|
-|[**teamsGet**](#teamsget) | **GET** /teams | Get all teams|
+|[**teamsGet**](#teamsget) | **GET** /teams | Get teams with optional filtering|
 |[**teamsIdDelete**](#teamsiddelete) | **DELETE** /teams/{id} | Delete a team|
 |[**teamsIdGet**](#teamsidget) | **GET** /teams/{id} | Get a team by ID|
 |[**teamsIdPut**](#teamsidput) | **PUT** /teams/{id} | Update a team|
 |[**teamsPost**](#teamspost) | **POST** /teams | Create a new team|
-|[**teamsSearchGet**](#teamssearchget) | **GET** /teams/search | Get X teams by prefix|
+|[**teamsUsersDelete**](#teamsusersdelete) | **DELETE** /teams/users | Delete a user from a team|
+|[**teamsUsersPut**](#teamsusersput) | **PUT** /teams/users | Add a user to a team|
 |[**usersGet**](#usersget) | **GET** /users | Get all users|
 |[**usersIdDelete**](#usersiddelete) | **DELETE** /users/{id} | Delete a user|
 |[**usersIdGet**](#usersidget) | **GET** /users/{id} | Get a user by ID|
@@ -23,169 +21,10 @@ All URIs are relative to *http://localhost*
 |[**voiceTeamIdGet**](#voiceteamidget) | **GET** /voice/{teamId} | Join voice chat room|
 |[**voiceTeamIdLeaveDelete**](#voiceteamidleavedelete) | **DELETE** /voice/{teamId}/leave | Leave voice chat room|
 
-# **teamsAddUserToTeamPut**
-> { [key: string]: any; } teamsAddUserToTeamPut(request)
-
-Add a user to a team by providing user ID and team ID
-
-### Example
-
-```typescript
-import {
-    DefaultApi,
-    Configuration,
-    DtoUserToTeamRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new DefaultApi(configuration);
-
-let request: DtoUserToTeamRequest; //User ID and Team ID
-
-const { status, data } = await apiInstance.teamsAddUserToTeamPut(
-    request
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **request** | **DtoUserToTeamRequest**| User ID and Team ID | |
-
-
-### Return type
-
-**{ [key: string]: any; }**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | User added to team |  -  |
-|**400** | Bad Request: Invalid request body or missing userId or teamId |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **teamsByNameGet**
-> Array<EntityTeam> teamsByNameGet()
-
-Get a list of teams that match the specified name
-
-### Example
-
-```typescript
-import {
-    DefaultApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new DefaultApi(configuration);
-
-let name: string; //Name to search for (default to undefined)
-
-const { status, data } = await apiInstance.teamsByNameGet(
-    name
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **name** | [**string**] | Name to search for | defaults to undefined|
-
-
-### Return type
-
-**Array<EntityTeam>**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-|**400** | Bad Request: Missing \&#39;name\&#39; query parameter |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **teamsDeleteUserFromTeamDelete**
-> { [key: string]: any; } teamsDeleteUserFromTeamDelete(request)
-
-Delete a user from a team by providing the user ID and team ID
-
-### Example
-
-```typescript
-import {
-    DefaultApi,
-    Configuration,
-    DtoUserToTeamRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new DefaultApi(configuration);
-
-let request: DtoUserToTeamRequest; //User ID and Team ID
-
-const { status, data } = await apiInstance.teamsDeleteUserFromTeamDelete(
-    request
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **request** | **DtoUserToTeamRequest**| User ID and Team ID | |
-
-
-### Return type
-
-**{ [key: string]: any; }**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | User deleted from team |  -  |
-|**400** | Bad Request: Invalid request body or missing userId or teamId |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **teamsGet**
 > Array<EntityTeam> teamsGet()
 
-Get a list of all teams
+Get teams - all teams, by name, or by prefix with limit
 
 ### Example
 
@@ -198,11 +37,24 @@ import {
 const configuration = new Configuration();
 const apiInstance = new DefaultApi(configuration);
 
-const { status, data } = await apiInstance.teamsGet();
+let name: string; //Filter by exact name (optional) (default to undefined)
+let prefix: string; //Filter by name prefix (optional) (default to undefined)
+let limit: number; //Limit results (required with prefix) (optional) (default to undefined)
+
+const { status, data } = await apiInstance.teamsGet(
+    name,
+    prefix,
+    limit
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **name** | [**string**] | Filter by exact name | (optional) defaults to undefined|
+| **prefix** | [**string**] | Filter by name prefix | (optional) defaults to undefined|
+| **limit** | [**number**] | Limit results (required with prefix) | (optional) defaults to undefined|
 
 
 ### Return type
@@ -211,7 +63,7 @@ This endpoint does not have any parameters.
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -223,6 +75,7 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
+|**400** | Bad Request |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -263,7 +116,7 @@ const { status, data } = await apiInstance.teamsIdDelete(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -316,7 +169,7 @@ const { status, data } = await apiInstance.teamsIdGet(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -372,7 +225,7 @@ const { status, data } = await apiInstance.teamsIdPut(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -426,7 +279,7 @@ const { status, data } = await apiInstance.teamsPost(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -443,28 +296,27 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **teamsSearchGet**
-> Array<EntityTeam> teamsSearchGet()
+# **teamsUsersDelete**
+> { [key: string]: any; } teamsUsersDelete(request)
 
-Get a list of X teams that start with the specified prefix
+Delete a user from a team by providing team ID
 
 ### Example
 
 ```typescript
 import {
     DefaultApi,
-    Configuration
+    Configuration,
+    DtoUserToTeamRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new DefaultApi(configuration);
 
-let prefix: string; //Prefix to search for (default to undefined)
-let limit: number; //Number of teams to retrieve (default to undefined)
+let request: DtoUserToTeamRequest; //User ID and Team ID
 
-const { status, data } = await apiInstance.teamsSearchGet(
-    prefix,
-    limit
+const { status, data } = await apiInstance.teamsUsersDelete(
+    request
 );
 ```
 
@@ -472,17 +324,16 @@ const { status, data } = await apiInstance.teamsSearchGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **prefix** | [**string**] | Prefix to search for | defaults to undefined|
-| **limit** | [**number**] | Number of teams to retrieve | defaults to undefined|
+| **request** | **DtoUserToTeamRequest**| User ID and Team ID | |
 
 
 ### Return type
 
-**Array<EntityTeam>**
+**{ [key: string]: any; }**
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -493,9 +344,61 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
-|**400** | Bad Request: Missing prefix or limit query parameters, or limit is NaN |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | User deleted from team |  -  |
+|**400** | Bad Request: Invalid request body or missing userId or teamId |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **teamsUsersPut**
+> { [key: string]: any; } teamsUsersPut(request)
+
+Add a user to a team by providing user ID and team ID
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    DtoUserToTeamRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let request: DtoUserToTeamRequest; //User ID and Team ID
+
+const { status, data } = await apiInstance.teamsUsersPut(
+    request
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **request** | **DtoUserToTeamRequest**| User ID and Team ID | |
+
+
+### Return type
+
+**{ [key: string]: any; }**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | User added to team |  -  |
+|**400** | Bad Request: Invalid request body or missing userId or teamId |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -527,7 +430,7 @@ This endpoint does not have any parameters.
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -578,7 +481,7 @@ const { status, data } = await apiInstance.usersIdDelete(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -629,7 +532,7 @@ const { status, data } = await apiInstance.usersIdGet(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -684,7 +587,7 @@ const { status, data } = await apiInstance.usersIdPut(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -741,7 +644,7 @@ const { status, data } = await apiInstance.usersIdStatisticsPut(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -904,7 +807,7 @@ void (empty response body)
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
@@ -960,7 +863,7 @@ const { status, data } = await apiInstance.voiceTeamIdLeaveDelete(
 
 ### Authorization
 
-No authorization required
+[Bearer](../README.md#Bearer)
 
 ### HTTP request headers
 
