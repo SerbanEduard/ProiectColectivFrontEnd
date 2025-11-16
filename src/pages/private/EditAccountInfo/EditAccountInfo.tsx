@@ -14,6 +14,9 @@ import { toast } from "sonner";
 import axios from "axios";
 import { useState } from "react";
 
+const FAILED_UPDATE_PASSWORD = "Password update failed";
+const FAILED_UPDATE_ACCOUNT_INFO = "Account update failed";
+
 const formSchema = z.object({
   firstName : z.string()
             .min(1,"First name must not be empty")
@@ -97,10 +100,10 @@ export default function EditAccountInfo() {
             if (status === 400) return "Bad request";
             if (status === 404) return "User not found";
             if (status === 500) return "Server error";
-            return err.response?.data?.message || err.message || "Update failed";
+            return err.response?.data?.message || err.message || FAILED_UPDATE_ACCOUNT_INFO;
           }
-          if (err instanceof Error) return err.message || "Account update failed";
-          return "Account update failed";
+          if (err instanceof Error) return err.message || FAILED_UPDATE_ACCOUNT_INFO;
+          return FAILED_UPDATE_ACCOUNT_INFO;
         },
       }
     );
@@ -130,10 +133,10 @@ export default function EditAccountInfo() {
             const status = err.response?.status;
             if (status === 400) return "Invalid old password";
             if (status === 500) return "Server error";
-            return err.response?.data?.message || err.message || "Password update failed";
+            return err.response?.data?.message || err.message || FAILED_UPDATE_PASSWORD;
           }
-          if (err instanceof Error) return err.message || "Password update failed";
-          return "Password update failed";
+          if (err instanceof Error) return err.message || FAILED_UPDATE_PASSWORD;
+          return FAILED_UPDATE_PASSWORD;
         },
       }
     );
