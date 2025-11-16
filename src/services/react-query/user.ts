@@ -1,12 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import type { EntityUser } from "@/api";
+import type { DtoUserPasswordRequestDTO, DtoUserUpdateRequestDTO, DtoUserUpdateResponseDTO } from "@/api";
 import { api } from "./api"
 import { useAuthStore } from "../stores/useAuthStore";
 
-export const useUpdateUser = () => {
-  return useMutation<EntityUser, Error, { id: string, user: EntityUser }>({
+export const useUpdateUserData = () => {
+  return useMutation<DtoUserUpdateResponseDTO, Error, { id: string, user: DtoUserUpdateRequestDTO }>({
     mutationFn: ({ id, user }) =>
-      api.usersIdPut(id, user).then(res => res.data),
+      api.usersIdPatch(id, user).then(res => res.data),
     onSuccess: (data) => {
       const auth = useAuthStore.getState();
       if (data) {
@@ -16,3 +16,10 @@ export const useUpdateUser = () => {
     }
   });
 };
+
+export const useUpdateUserPassword = () => {
+  return useMutation<string | { [key: string]: string; }, Error, { id: string, request: DtoUserPasswordRequestDTO }>({
+    mutationFn: ({ id, request }) =>
+      api.usersIdPasswordPut(id, request).then(res => res.data),
+  });
+}

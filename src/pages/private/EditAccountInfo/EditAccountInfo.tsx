@@ -5,13 +5,14 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Label } from "@/components/ui/label";
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod";
-import { ModelTopicOfInterest, type EntityUser } from "@/api";
+import { ModelTopicOfInterest, type DtoUserUpdateRequestDTO } from "@/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import logo from "@/assets/logo.png";
 import { useAuthStore } from "@/services/stores/useAuthStore";
-import { useUpdateUser } from "@/services/react-query/user";
+import { useUpdateUserData, useUpdateUserPassword } from "@/services/react-query/user";
 import { toast } from "sonner";
 import axios from "axios";
+import { useState } from "react";
 
 const formSchema = z.object({
   firstName : z.string()
@@ -26,21 +27,27 @@ const formSchema = z.object({
             .min(1,"Username must not be empty")
             .max(60,"Username can't be more than 60 characters"),
 
-  password: z.string()
-            .min(6,"Password must be at least 6 characters long"),
-
-  checkPassword: z.string(),
-
   email: z.email("Email is not valid!"),
 
   favoriteTopic: z.array(z.string()),
-}).refine(data => data.password === data.checkPassword, {
+});
+
+const passwordFormSchema = z.object({
+  oldPassword: z.string()
+            .min(1,"Old password is required"),
+
+  newPassword: z.string()
+            .min(6,"Password must be at least 6 characters long"),
+
+  checkNewPassword: z.string(),
+}).refine(data => data.newPassword === data.checkNewPassword, {
   message: "Passwords must match!",
-  path: ["checkPassword"],
+  path: ["checkNewPassword"],
 });
 
 export default function EditAccountInfo() {
   const loggedUser = useAuthStore((state) => state.user);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,45 +56,38 @@ export default function EditAccountInfo() {
     lastName: loggedUser?.lastname ?? "",
     username: loggedUser?.username ?? "",
     email: loggedUser?.email ?? "",
-    password: "",
-    checkPassword: "",
     favoriteTopic: loggedUser?.topicsOfInterest ?? [],
+    }
+  });
+
+  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      checkNewPassword: "",
     }
   });
 
   const topicList = Object.values(ModelTopicOfInterest);
 
-  const { mutateAsync: updateUserAsync, isPending } = useUpdateUser();
+  const { mutateAsync: updateUserAsync, isPending } = useUpdateUserData();
+  const { mutateAsync: updatePasswordAsync, isPending: isPasswordPending } = useUpdateUserPassword();
 
   const handleUpdate = async (data : z.infer<typeof formSchema>) => {
-    const { firstName, lastName, username, password, email, favoriteTopic } = data;
+    const { firstName, lastName, username, email, favoriteTopic } = data;
     const id = loggedUser?.id;
-    console.log({
-      id,
-      firstName,
-      lastName,
-      username,
-      password,
-      email,
-      favoriteTopic
-    });
 
-    /* TIP: daca undeva nu se pune calumea statisticile si echipele unui user
-       in stare, backend-ul le reseteaza la update */
-    const modifiedUserDataDTO : EntityUser = {
+    const modifiedUserData : DtoUserUpdateRequestDTO = {
       'email': email,
       'firstname': firstName,
-      'id': id,
       'lastname': lastName,
-      'password': password,
-      'statistics' : loggedUser?.statistics,
-      'teams' : loggedUser?.teams,
       'topicsOfInterest': favoriteTopic.map(topic => topic as ModelTopicOfInterest),
       'username': username,
     }
 
     await toast.promise(
-      updateUserAsync({ id: id as string, user: modifiedUserDataDTO }),
+      updateUserAsync({ id: id as string, user: modifiedUserData }),
       {
         loading: "Updating account...",
         success: () => "Account updated successfully!",
@@ -97,7 +97,7 @@ export default function EditAccountInfo() {
             if (status === 400) return "Bad request";
             if (status === 404) return "User not found";
             if (status === 500) return "Server error";
-            return err.response?.data?.message || err.message || "Login failed";
+            return err.response?.data?.message || err.message || "Update failed";
           }
           if (err instanceof Error) return err.message || "Account update failed";
           return "Account update failed";
@@ -106,15 +106,53 @@ export default function EditAccountInfo() {
     );
   }
 
+  const handlePasswordUpdate = async (data : z.infer<typeof passwordFormSchema>) => {
+    const { oldPassword, newPassword } = data;
+    const id = loggedUser?.id;
+
+    const passwordUpdateDTO = {
+      'id': id,
+      'oldPassword': oldPassword,
+      'newPassword': newPassword,
+    }
+
+    await toast.promise(
+      updatePasswordAsync({ id: id as string, request: passwordUpdateDTO }),
+      {
+        loading: "Updating password...",
+        success: () => {
+          passwordForm.reset();
+          setShowPasswordForm(false);
+          return "Password updated successfully!";
+        },
+        error: (err: unknown) => {
+          if (axios.isAxiosError(err)) {
+            const status = err.response?.status;
+            if (status === 400) return "Invalid old password";
+            if (status === 500) return "Server error";
+            return err.response?.data?.message || err.message || "Password update failed";
+          }
+          if (err instanceof Error) return err.message || "Password update failed";
+          return "Password update failed";
+        },
+      }
+    );
+  }
+
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Card className="relative flex flex-row p-6 mx-5 shadow-md min-h-fit min-w-fit">
-        <CardContent>
-          <CardHeader className="text-center mb-3 w-full mx-10">
-            <CardTitle className="mb-1">Update your StudyFlow Account</CardTitle>
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <Card className="relative w-full max-w-2xl p-6 shadow-md">
+        {/* Logo in top-left corner */}
+        <div className="absolute top-4 left-4">
+          <img src={logo} alt="StudyFlow Logo" className="w-12 h-12" />
+        </div>
+         
+        <CardContent className="pt-8">
+          <CardHeader className="text-center mb-6">
+            <CardTitle className="text-2xl mb-2">Update your StudyFlow Account</CardTitle>
             <CardDescription>Edit your data below</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col mt-4 justify-center w-100">
+          <CardContent className="flex flex-col justify-center">
             <form className="flex flex-col gap-y-4" onSubmit={form.handleSubmit(handleUpdate)}>
               <FieldGroup>
                 <Controller
@@ -169,40 +207,6 @@ export default function EditAccountInfo() {
                 />
 
                 <Controller
-                  name="password"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>New Password</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        type="password"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="checkPassword"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Check new password</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        type="password"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
-                    </Field>
-                  )}
-                />
-
-                <Controller
                   name="email"
                   control={form.control}
                   render={({ field, fieldState }) => (
@@ -221,7 +225,7 @@ export default function EditAccountInfo() {
 
                 <Field className="m-6 mb-10">
                   <FieldLabel className="mb-2">Your favorite topics</FieldLabel>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       {topicList.map((topic) => {
                         const selected = form.watch("favoriteTopic").includes(topic);
                         return (
@@ -252,19 +256,79 @@ export default function EditAccountInfo() {
                 <Button type="submit" disabled={isPending} className="w-1/2 self-center mt-6">
                   {isPending ? 'Updating...' : 'Save Changes'}
                 </Button>
+
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowPasswordForm(!showPasswordForm)} 
+                  className="w-1/2 self-center mt-2"
+                >
+                  {showPasswordForm ? 'Cancel Password Change' : 'Change Password'}
+                </Button>
               </FieldGroup>
             </form>
+
+            {showPasswordForm && (
+              <form className="flex flex-col gap-y-4 mt-6 pt-6 border-t" onSubmit={passwordForm.handleSubmit(handlePasswordUpdate)}>
+                <FieldGroup>
+                  <Controller
+                    name="oldPassword"
+                    control={passwordForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>Old Password</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          type="password"
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="newPassword"
+                    control={passwordForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>New Password</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          type="password"
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="checkNewPassword"
+                    control={passwordForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>Confirm New Password</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          type="password"
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]}></FieldError>}
+                      </Field>
+                    )}
+                  />
+
+                  <Button type="submit" disabled={isPasswordPending} className="w-1/2 self-center mt-4">
+                    {isPasswordPending ? 'Updating Password...' : 'Update Password'}
+                  </Button>
+                </FieldGroup>
+              </form>
+            )}
           </CardContent>
-        </CardContent>
-        <div className="hidden md:flex w-px bg-gray-300 mx-4"/>
-        <CardContent className="hidden md:flex flex-col justify-center min-w-fit w-xs">
-          <div className="flex justify-center mb-4">
-            <img src={logo} alt="StudyFlow Logo" className="w-24 h-24" />
-          </div>
-          <CardHeader className="text-center mb-3">
-            <CardTitle>Update your StudyFlow Account</CardTitle>
-            <CardDescription>Edit your account data</CardDescription>
-          </CardHeader>
         </CardContent>
       </Card>
     </div>
