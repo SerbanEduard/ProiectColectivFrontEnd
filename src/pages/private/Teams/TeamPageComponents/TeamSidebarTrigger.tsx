@@ -9,13 +9,13 @@ export function TeamSidebarTrigger() {
     <Button
       onClick={toggleSidebar}
       variant="ghost"
-      className="mt-1.5 w-12 h-12 p-0 flex items-center justify-center"
+      className="top-2 w-12 h-12 p-0 absolute items-center"
       aria-label="Toggle Sidebar"
     >
       {open ? (
-        <PanelRightClose className="w-7! h-7!" />
-      ) : (
         <PanelLeftClose className="w-7! h-7!" />
+      ) : (
+        <PanelRightClose className="w-7! h-7!" />
       )}
     </Button>
   );

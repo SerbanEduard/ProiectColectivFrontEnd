@@ -6,151 +6,159 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-  SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarHeader,
   SidebarFooter,
+  SidebarMenuSub,
 } from "@/components/ui/sidebar";
 import { Collapsible } from "@radix-ui/react-collapsible";
-import { Home, Settings, User } from "lucide-react";
+import { AudioLines, CalendarClock, CalendarDays, ChevronDown, ChevronUp, FolderClosed, LayoutDashboard, MessageSquareText, UsersRound } from "lucide-react";
 import { useState } from "react";
 
 export function MySidebar() {
-  const items = [
-    { title: "Home", icon: Home, url: "/home" },
-    { title: "Profile", icon: User, url: "/profile" },
-    { title: "Settings", icon: Settings, url: "/settings" },
-  ];
+  const [chatsAreOpen, setChatsAreOpen] = useState(false);
+  const [voicesAreOpen, setVoicesAreOpen] = useState(false);
 
-  const subItems = [
-    { title: "Files", icon: Home },
-    { title: "Events", icon: Home}
+  const chatRooms = [
+    { title: "Announcement"},
+    { title: "General"},
+    { title: "Memes"},
   ]
 
-  const [openMap, setOpenMap] = useState<Record<string, boolean>>({
-    Home: false,
-    Profile: false,
-    Settings: false,
-  });
+  const voiceRooms = [
+    { title: "General", peopleOn:10},
+    { title: "Daily Meeting Room", peopleOn:3},
+    { title: "Relaxing", peopleOn:4}
+  ]
 
   return (
     <Sidebar variant="floating">
-        <SidebarHeader className="border">
-            Team name here
+        <SidebarHeader>
+            HEADER
         </SidebarHeader>
         <SidebarContent>
-          <Collapsible>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+                  <div className="flex items-center gap-8 text-xl">
+                    <LayoutDashboard/>
+                    Dashboard
+                  </div>
+                </SidebarGroupLabel>     
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <Collapsible
+            open={chatsAreOpen}
+            onOpenChange={setChatsAreOpen}
+          >
             <SidebarGroup>
               <CollapsibleTrigger>
-                <SidebarGroupLabel className="font-bold text-sm">Chat Rooms</SidebarGroupLabel>
+                <SidebarGroupLabel className="font-bold text-sm justify-between hover:text-primary cursor-pointer">
+                  <div className="flex items-center gap-4.5">
+                    <MessageSquareText size={22}/>
+                    Chat Rooms
+                  </div>
+                  { chatsAreOpen && 
+                    <ChevronUp/>
+                  }
+                  {
+                    !chatsAreOpen &&
+                    <ChevronDown/>
+                  }
+                </SidebarGroupLabel>
               </CollapsibleTrigger>
               <CollapsibleContent>
               <SidebarGroupContent>
-                  <SidebarMenu>
-                  {items.map((item) => (
+                  <SidebarMenuSub className="gap-y-2">
+                  {chatRooms.map((item) => (
                       <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
-                          <a href={item.url} className="flex items-center gap-2">
-                          <item.icon size={16} />
+                        <div>
                           {item.title}
-                          </a>
+                        </div>
                       </SidebarMenuButton>
                       </SidebarMenuItem>
                   ))}
-                  </SidebarMenu>
+                  </SidebarMenuSub>
               </SidebarGroupContent>
               </CollapsibleContent>
             </SidebarGroup>
           </Collapsible>
-          <Collapsible>
+          <Collapsible
+            open={voicesAreOpen}
+            onOpenChange={setVoicesAreOpen}
+          >
             <SidebarGroup>
               <CollapsibleTrigger>
-                <SidebarGroupLabel className="font-bold text-sm">Voice Rooms</SidebarGroupLabel>
+                <SidebarGroupLabel className="font-bold text-sm justify-between hover:text-primary cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <AudioLines/>
+                    Voice Rooms
+                  </div>
+                  { voicesAreOpen && 
+                    <ChevronUp/>
+                  }
+                  {
+                    !voicesAreOpen &&
+                    <ChevronDown/>
+                  }
+                </SidebarGroupLabel>
               </CollapsibleTrigger>
               <CollapsibleContent>
               <SidebarGroupContent>
-                  <SidebarMenu>
-                  {items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
+                  <SidebarMenuSub className="gap-y-3">
+                  {voiceRooms.map((item) => (
+                      <SidebarMenuItem className="cursor-pointer" key={item.title}>
                       <SidebarMenuButton asChild>
-                          <a href={item.url} className="flex items-center gap-2">
-                          <item.icon size={16} />
-                          {item.title}
-                          </a>
+                        <div className="justify-between">
+                          <p className="line-clamp-1">{item.title}</p>
+                          <div className="flex items-center gap-1">
+                          {item.peopleOn}
+                          <UsersRound size={20}/>
+                          </div>
+                        </div>
                       </SidebarMenuButton>
                       </SidebarMenuItem>
                   ))}
-                  </SidebarMenu>
-              </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-          <Collapsible>
-            <SidebarGroup>
-              <CollapsibleTrigger>
-                <SidebarGroupLabel className="font-bold text-sm">Chat Rooms</SidebarGroupLabel>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-              <SidebarGroupContent>
-                  <SidebarMenu>
-                  {items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                          <a href={item.url} className="flex items-center gap-2">
-                          <item.icon size={16} />
-                          {item.title}
-                          </a>
-                      </SidebarMenuButton>
-                      </SidebarMenuItem>
-                  ))}
-                  </SidebarMenu>
-              </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-          <Collapsible>
-            <SidebarGroup>
-              <CollapsibleTrigger>
-                <SidebarGroupLabel className="font-bold text-sm">Chat Rooms</SidebarGroupLabel>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-              <SidebarGroupContent>
-                  <SidebarMenu>
-                  {items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                          <a href={item.url} className="flex items-center gap-2">
-                          <item.icon size={16} />
-                          {item.title}
-                          </a>
-                      </SidebarMenuButton>
-                      </SidebarMenuItem>
-                  ))}
-                  </SidebarMenu>
+                  </SidebarMenuSub>
               </SidebarGroupContent>
               </CollapsibleContent>
             </SidebarGroup>
           </Collapsible>
           <SidebarGroup>
             <SidebarGroupContent>
-                  <SidebarMenu>
-                  {subItems.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <div>
-                          <item.icon size={16} />
-                          {item.title}
-                        </div>
-                      </SidebarMenuButton>
-                      </SidebarMenuItem>
-                  ))}
-                  </SidebarMenu>
-              </SidebarGroupContent>
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+                  <div className="flex items-center gap-10">
+                    <FolderClosed/>
+                    Team Files
+                  </div>
+                </SidebarGroupLabel>     
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+                  <div className="flex items-center gap-10">
+                    <CalendarClock/>
+                    Events
+                  </div>
+                </SidebarGroupLabel>     
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+                  <div className="flex items-center gap-10">
+                    <CalendarDays/>
+                    Calendar
+                  </div>
+                </SidebarGroupLabel>     
+            </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter className="border">
-            Heyooo
+        <SidebarFooter>
+            FOOTER
         </SidebarFooter>
     </Sidebar>
   );

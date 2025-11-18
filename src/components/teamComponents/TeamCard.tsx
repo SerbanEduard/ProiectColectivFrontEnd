@@ -2,8 +2,16 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Users, Calendar } from "lucide-react"
 import type {EntityTeam} from "@/api";
+import { useNavigate } from "react-router-dom";
 
 export function TeamCard({team}: {team: EntityTeam}) {
+    const navigate = useNavigate();
+
+    const handleViewTeam = () => {
+        navigate(`/teams/${team.id}`)
+    }
+
+
     return (
         <Card className="w-80 bg-neutral-800 border border-gray-700 text-gray-100">
             <CardHeader>
@@ -38,7 +46,9 @@ export function TeamCard({team}: {team: EntityTeam}) {
             </CardContent>
 
             <CardFooter>
-                <Button className="w-full mt-2">
+                <Button className="w-full mt-2"
+                    onClick={ handleViewTeam }
+                >
                     View Team
                 </Button>
             </CardFooter>

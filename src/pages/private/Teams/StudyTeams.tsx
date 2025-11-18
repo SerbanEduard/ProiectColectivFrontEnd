@@ -6,7 +6,7 @@ import {Dialog, DialogTrigger, DialogContent} from "@/components/ui/dialog"
 import CreateTeamForm from "@/components/teamComponents/CreateTeamForm";
 import {useAuthStore} from "@/services/stores/useAuthStore.ts";
 import SearchTeamForm from "@/components/teamComponents/SearchTeamForm.tsx";
-import {Search} from "lucide-react";
+import {Plus, Search} from "lucide-react";
 import {useTeamStore} from "@/services/stores/useTeamStore.ts";
 import {useGetTeams} from "@/services/react-query/teams.ts";
 
@@ -55,7 +55,7 @@ export default function StudyTeams() {
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Button className="bg-gray-100 text-black px-4 py-2 rounded-md font-medium hover:bg-gray-200">
-                                    + Create Team
+                                    <Plus/> Create Team
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>

@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MySidebar } from "./TeamPageComponents/TeamSidebar";
 import { TeamSidebarTrigger } from "./TeamPageComponents/TeamSidebarTrigger";
+import { TeamDashboard } from "./TeamPageComponents/TeamDashboard";
 
 export default function TeamPage() {
     const { teamId } = useParams<{teamId: string}>(); 
@@ -13,11 +14,16 @@ export default function TeamPage() {
     return(
         <SidebarProvider>
             <MySidebar />
-            <TeamSidebarTrigger />
-            <div className="bg-accent w-screen">
-                <div className="bg-black w-screen h-fit">
-                </div>
+            <div className="flex flex-col w-full h-screen">
+                <div className="flex flex-col w-full flex-1">
+                    <TeamSidebarTrigger />
+                    <div className="border w-full h-16">
 
+                    </div>
+                    <div className="flex-1 w-full overflow-auto">
+                        <TeamDashboard teamId={teamId!}/>
+                    </div>
+                </div>
             </div>
         </SidebarProvider>
     )
