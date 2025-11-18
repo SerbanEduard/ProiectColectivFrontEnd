@@ -49,7 +49,7 @@ const passwordFormSchema = z.object({
 });
 
 export default function EditAccountInfo() {
-  const loggedUser = useAuthStore((state) => state.user);
+  const { user : loggedUser } = useAuthStore();
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
