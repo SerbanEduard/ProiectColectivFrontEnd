@@ -38,12 +38,17 @@ import {
   Search,
 } from "lucide-react";
 
-import { useGetPendingRequests, useRespondFriendRequest, useSearchUsers, useSendFriendRequest } from '@/services/react-query/friend';
-import type { EnrichedPending } from '@/services/react-query/friend';
-import type { DtoUserResponse } from '@/api';
-import { api as generatedApi } from '@/services/react-query/api';
-import { useFriendStore } from '@/services/stores/useFriendStore';
-import { useAuthStore } from '@/services/stores/useAuthStore';
+import {
+  useGetPendingRequests,
+  useRespondFriendRequest,
+  useSearchUsers,
+  useSendFriendRequest,
+} from "@/services/react-query/friend";
+import type { EnrichedPending } from "@/services/react-query/friend";
+import type { DtoUserResponse } from "@/api";
+import { api as generatedApi } from "@/services/react-query/api";
+import { useFriendStore } from "@/services/stores/useFriendStore";
+import { useAuthStore } from "@/services/stores/useAuthStore";
 
 type Friend = {
   id: string;
@@ -55,7 +60,10 @@ type Friend = {
 function mapUserToFriend(u: any): Friend {
   return {
     id: u.id || u.username || String(Math.random()),
-    name: `${u.firstname || ''} ${u.lastname || ''}`.trim() || u.username || 'Unknown',
+    name:
+      `${u.firstname || ""} ${u.lastname || ""}`.trim() ||
+      u.username ||
+      "Unknown",
     email: u.email,
     mutualFriends: 0,
   };
@@ -72,7 +80,7 @@ export default function Friends() {
   const [apiFriends, setApiFriends] = useState<Friend[]>([]);
 
   // search state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<DtoUserResponse[]>([]);
   const searchRef = useRef<number | null>(null);
 
@@ -93,46 +101,65 @@ export default function Friends() {
       const users: DtoUserResponse[] = (resp && (resp as any).data) || [];
       const mapped = users.map((u: any) => mapUserToFriend(u));
 
-      const withMutuals = await Promise.all(mapped.map(async (f) => {
-        try {
-          const r = await generatedApi.usersIdMutualOtherIdGet(userId, f.id as string);
-          const mutualList = (r && (r as any).data) || [];
-          return { ...f, mutualFriends: Array.isArray(mutualList) ? mutualList.length : 0 } as Friend;
-        } catch (e) {
-          console.error('failed mutual fetch for', f.id, e);
-          return { ...f, mutualFriends: 0 } as Friend;
-        }
-      }));
+      const withMutuals = await Promise.all(
+        mapped.map(async (f) => {
+          try {
+            const r = await generatedApi.usersIdMutualOtherIdGet(
+              userId,
+              f.id as string
+            );
+            const mutualList = (r && (r as any).data) || [];
+            return {
+              ...f,
+              mutualFriends: Array.isArray(mutualList)
+                ? mutualList.length
+                : 0,
+            } as Friend;
+          } catch (e) {
+            console.error("failed mutual fetch for", f.id, e);
+            return { ...f, mutualFriends: 0 } as Friend;
+          }
+        })
+      );
 
       if (mounted) setApiFriends(withMutuals);
     } catch (err) {
-      console.error('failed to load friends', err);
+      console.error("failed to load friends", err);
     } finally {
       if (mounted) setFriendsLoading(false);
     }
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [auth.user?.id]);
 
+  // load pending requests
   useEffect(() => {
-    if (!auth.user?.id) return;
-    const userId = auth.user.id;
+  if (!auth.user?.id) return;
+  const userId = auth.user.id;
 
-    setPendingLoading(true);
-    getPending.mutate(userId, {
+  setPendingLoading(true);
+  getPending.mutate(
+    { userId },
+    {
       onSuccess: (data) => {
-        setPendingRequests((data as unknown as EnrichedPending[]) || []);
+        setPendingRequests((data as EnrichedPending[]) || []);
         setPendingLoading(false);
       },
       onError: (err: any) => {
-        console.error('getPending error', err);
+        console.error("getPending error", err);
         setPendingLoading(false);
       },
-    });
-  }, [auth.user?.id]);
+    }
+  );
+}, [auth.user?.id]); // nu adăuga getPending aici
+
 
   // load friends on mount / user change
-  useEffect(() => { loadFriends(); }, [loadFriends]);
+  useEffect(() => {
+    loadFriends();
+  }, [loadFriends]);
 
   async function handleRespond(fromId: string, toId: string, accept: boolean) {
     try {
@@ -140,16 +167,23 @@ export default function Friends() {
       // refresh pending list
       const currentUserId = auth.user?.id;
       if (!currentUserId) return;
-      getPending.mutate(currentUserId, {
-        onSuccess: (data) => {
-          setPendingRequests((data as unknown as EnrichedPending[]) || []);
-          // reload friends so accepted friend appears
-          loadFriends().catch((e) => console.error('reload friends after accept failed', e));
-        },
-        onError: (err: any) => { console.error('refresh pending error', err); }
-      });
+      getPending.mutate(
+  { userId: currentUserId },
+  {
+    onSuccess: (data) => {
+      setPendingRequests((data as EnrichedPending[]) || []);
+      loadFriends().catch((e) =>
+        console.error("reload friends after accept failed", e)
+      );
+    },
+    onError: (err: any) => {
+      console.error("refresh pending error", err);
+    },
+  }
+);
+
     } catch (err) {
-      console.error('respond friend request error', err);
+      console.error("respond friend request error", err);
     }
   }
 
@@ -163,8 +197,12 @@ export default function Friends() {
       <main className="mx-auto max-w-5xl px-6 py-6">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-white">Friends</h1>
-            <p className="text-sm text-gray-400">Connect with classmates and study together</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">
+              Friends
+            </h1>
+            <p className="text-sm text-gray-400">
+              Connect with classmates and study together
+            </p>
           </div>
 
           <Dialog>
@@ -178,8 +216,13 @@ export default function Friends() {
             <DialogContent className="max-w-xl border border-neutral-700 bg-neutral-900 text-gray-100">
               <DialogHeader className="flex flex-row items-start justify-between space-y-0">
                 <div>
-                  <DialogTitle className="text-lg font-semibold">Add Friend</DialogTitle>
-                  <DialogDescription className="mt-1 text-sm text-gray-400">Search for students by name or email to add them as friends.</DialogDescription>
+                  <DialogTitle className="text-lg font-semibold">
+                    Add Friend
+                  </DialogTitle>
+                  <DialogDescription className="mt-1 text-sm text-gray-400">
+                    Search for students by name or email to add them as
+                    friends.
+                  </DialogDescription>
                 </div>
                 <DialogClose asChild></DialogClose>
               </DialogHeader>
@@ -192,10 +235,21 @@ export default function Friends() {
                     onChange={(e) => {
                       const v = e.target.value;
                       setSearchQuery(v);
-                      if (searchRef.current) window.clearTimeout(searchRef.current);
+                      if (searchRef.current)
+                        window.clearTimeout(searchRef.current);
                       searchRef.current = window.setTimeout(() => {
-                        if (!v.trim()) { setSearchResults([]); return; }
-                        searchUsers.mutate({ query: v }, { onSuccess: (res) => setSearchResults(res || []) });
+                        if (!v.trim()) {
+                          setSearchResults([]);
+                          return;
+                        }
+                        // aici e deja compatibil cu useSearchUsers (mutate({ query }))
+                        searchUsers.mutate(
+                          { query: v },
+                          {
+                            onSuccess: (res) =>
+                              setSearchResults(res || []),
+                          }
+                        );
                       }, 350);
                     }}
                     className="h-10 rounded-xl border border-neutral-800 bg-neutral-800/80 pl-9 text-sm text-gray-100 placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -207,31 +261,61 @@ export default function Friends() {
                 {searchResults.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <Search className="mb-4 h-10 w-10 text-gray-300" />
-                    <p className="text-sm text-gray-400">Start typing to search for friends</p>
+                    <p className="text-sm text-gray-400">
+                      Start typing to search for friends
+                    </p>
                   </div>
                 )}
 
                 {searchResults.map((u) => (
-                  <Card key={u.id} className="mb-2 border border-neutral-800 bg-neutral-800/90">
+                  <Card
+                    key={u.id}
+                    className="mb-2 border border-neutral-800 bg-neutral-800/90"
+                  >
                     <CardContent className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium text-white">{(u.firstname || '') + ' ' + (u.lastname || '')}</div>
-                        <div className="text-xs text-gray-400">{u.email}</div>
+                        <div className="font-medium text-white">
+                          {(u.firstname || "") +
+                            " " +
+                            (u.lastname || "")}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {u.email}
+                        </div>
                       </div>
 
                       <div>
                         <Button
                           size="sm"
                           onClick={async () => {
-                            if (!auth.user?.id) { alert('You must be logged in to send a friend request'); return; }
-                            if (!u.id) { alert('Selected user has no id'); return; }
-                            if (u.id === auth.user.id) { alert('You cannot send a friend request to yourself'); return; }
+                            if (!auth.user?.id) {
+                              alert(
+                                "You must be logged in to send a friend request"
+                              );
+                              return;
+                            }
+                            if (!u.id) {
+                              alert("Selected user has no id");
+                              return;
+                            }
+                            if (u.id === auth.user.id) {
+                              alert(
+                                "You cannot send a friend request to yourself"
+                              );
+                              return;
+                            }
 
                             try {
-                              await sendRequest.mutateAsync({ fromUserId: auth.user.id, toUserId: u.id });
-                              alert('Friend request sent');
+                              await sendRequest.mutateAsync({
+                                fromUserId: auth.user.id,
+                                toUserId: u.id,
+                              });
+                              alert("Friend request sent");
                             } catch (e: any) {
-                              const msg = e?.response?.data?.message || e?.message || 'Failed to send request';
+                              const msg =
+                                e?.response?.data?.message ||
+                                e?.message ||
+                                "Failed to send request";
                               alert(`Error: ${msg}`);
                             }
                           }}
@@ -249,60 +333,138 @@ export default function Friends() {
 
         <Tabs defaultValue="all">
           <TabsList className="grid w-full max-w-xl grid-cols-3 rounded-xl bg-neutral-800">
-            <TabsTrigger value="all" className="gap-1 rounded-xl text-gray-300 data-[state=active]:bg-neutral-700 data-[state=active]:text-white">
+            <TabsTrigger
+              value="all"
+              className="gap-1 rounded-xl text-gray-300 data-[state=active]:bg-neutral-700 data-[state=active]:text-white"
+            >
               All Friends
-              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] justify-center border border-neutral-700 bg-neutral-900 px-1 text-[11px] font-medium text-gray-100">{friends.length}</Badge>
+              <Badge
+                variant="secondary"
+                className="ml-1 h-5 min-w-[20px] justify-center border border-neutral-700 bg-neutral-900 px-1 text-[11px] font-medium text-gray-100"
+              >
+                {friends.length}
+              </Badge>
             </TabsTrigger>
 
-            <TabsTrigger value="pending" className="gap-1 rounded-xl text-gray-300 data-[state=active]:bg-neutral-700 data-[state=active]:text-white">
+            <TabsTrigger
+              value="pending"
+              className="gap-1 rounded-xl text-gray-300 data-[state=active]:bg-neutral-700 data-[state=active]:text-white"
+            >
               Pending
-              <Badge variant="secondary" className="ml-1 h-5 min-w-[20px] justify-center border border-neutral-700 bg-neutral-900 px-1 text-[11px] font-medium text-gray-100">{pendingRequests.length}</Badge>
+              <Badge
+                variant="secondary"
+                className="ml-1 h-5 min-w-[20px] justify-center border border-neutral-700 bg-neutral-900 px-1 text-[11px] font-medium text-gray-100"
+              >
+                {pendingRequests.length}
+              </Badge>
             </TabsTrigger>
 
-            <TabsTrigger value="suggestions" className="rounded-xl text-gray-300 data-[state=active]:bg-neutral-700 data-[state=active]:text-white">Suggestions</TabsTrigger>
+            <TabsTrigger
+              value="suggestions"
+              className="rounded-xl text-gray-300 data-[state=active]:bg-neutral-700 data-[state=active]:text-white"
+            >
+              Suggestions
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-4 space-y-3">
-            {friendsLoading && <div className="text-sm text-gray-400">Loading friends…</div>}
-            {!friendsLoading && friends.length === 0 && <div className="text-sm text-gray-400">No friends found.</div>}
-            {!friendsLoading && friends.map((friend) => (<FriendRow key={friend.id} friend={friend} />))}
+            {friendsLoading && (
+              <div className="text-sm text-gray-400">
+                Loading friends…
+              </div>
+            )}
+            {!friendsLoading && friends.length === 0 && (
+              <div className="text-sm text-gray-400">
+                No friends found.
+              </div>
+            )}
+            {!friendsLoading &&
+              friends.map((friend) => (
+                <FriendRow key={friend.id} friend={friend} />
+              ))}
           </TabsContent>
 
           <TabsContent value="pending" className="mt-4 space-y-3">
-            {pendingLoading && <div className="text-sm text-gray-400">Loading pending requests…</div>}
+            {pendingLoading && (
+              <div className="text-sm text-gray-400">
+                Loading pending requests…
+              </div>
+            )}
 
-            {!pendingLoading && pendingRequests.length === 0 && (<div className="text-sm text-gray-400">No pending requests right now.</div>)}
+            {!pendingLoading && pendingRequests.length === 0 && (
+              <div className="text-sm text-gray-400">
+                No pending requests right now.
+              </div>
+            )}
 
-            {!pendingLoading && pendingRequests.map((r) => {
-              const req = (r && (r.request ? r.request : r)) || {};
-              const user = r && r.user ? r.user : undefined;
-              const fromId = req.fromUserId || '';
-              const toId = req.toUserId || '';
-              const created = req.createdAt || req.createdAtUTC || '';
-              const key = `${fromId}:${toId}`;
+            {!pendingLoading &&
+              pendingRequests.map((r) => {
+                const req = (r && (r.request ? r.request : r)) || {};
+                const user = r && r.user ? r.user : undefined;
+                const fromId = req.fromUserId || "";
+                const toId = req.toUserId || "";
+                const created = req.createdAt || req.createdAtUTC || "";
+                const key = `${fromId}:${toId}`;
 
-              return (
-                <Card key={key} className="border border-neutral-800 bg-neutral-800/90 shadow-sm">
-                  <CardContent className="flex items-center justify-between gap-4 px-4 py-3">
-                    <div>
-                      <div className="font-medium leading-none text-white">{user?.username || (user ? `${user.firstname || ''} ${user.lastname || ''}`.trim() : fromId)}</div>
-                      <div className="text-xs text-gray-400">Requested at: {created ? new Date(created).toLocaleString() : 'Unknown'}</div>
-                      <div className="text-xs text-gray-400">{user?.email}</div>
-                    </div>
+                return (
+                  <Card
+                    key={key}
+                    className="border border-neutral-800 bg-neutral-800/90 shadow-sm"
+                  >
+                    <CardContent className="flex items-center justify-between gap-4 px-4 py-3">
+                      <div>
+                        <div className="font-medium leading-none text-white">
+                          {user?.username ||
+                            (user
+                              ? `${user.firstname || ""} ${
+                                  user.lastname || ""
+                                }`.trim()
+                              : fromId)}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Requested at:{" "}
+                          {created
+                            ? new Date(created).toLocaleString()
+                            : "Unknown"}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {user?.email}
+                        </div>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button onClick={() => handleRespond(fromId, toId, true)} size="sm" className="bg-green-600 text-white">Accept</Button>
-                      <Button onClick={() => handleRespond(fromId, toId, false)} variant="ghost" size="sm" className="text-red-400">Deny</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-
-            {/* debug UI removed per request */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() =>
+                            handleRespond(fromId, toId, true)
+                          }
+                          size="sm"
+                          className="bg-green-600 text-white"
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            handleRespond(fromId, toId, false)
+                          }
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400"
+                        >
+                          Deny
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
           </TabsContent>
 
-          <TabsContent value="suggestions" className="mt-6 text-sm text-gray-400">No suggestions at the moment.</TabsContent>
+          <TabsContent
+            value="suggestions"
+            className="mt-6 text-sm text-gray-400"
+          >
+            No suggestions at the moment.
+          </TabsContent>
         </Tabs>
       </main>
     </div>
@@ -315,32 +477,58 @@ function FriendRow({ friend }: { friend: Friend }) {
       <CardContent className="flex items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border border-neutral-700 bg-neutral-900">
-            <AvatarFallback className="text-gray-100">{friend.name.split(" ").map((n: string) => n[0]).join("")}</AvatarFallback>
+            <AvatarFallback className="text-gray-100">
+              {friend.name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")}
+            </AvatarFallback>
           </Avatar>
           <div className="space-y-0.5">
-            <div className="font-medium leading-none text-white">{friend.name}</div>
+            <div className="font-medium leading-none text-white">
+              {friend.name}
+            </div>
             <div className="text-xs text-gray-400">{friend.email}</div>
-            <div className="text-[11px] text-gray-500">{friend.mutualFriends} mutual friends</div>
+            <div className="text-[11px] text-gray-500">
+              {friend.mutualFriends} mutual friends
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1 border-neutral-700 bg-neutral-900 text-gray-100 hover:bg-neutral-800">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1 border-neutral-700 bg-neutral-900 text-gray-100 hover:bg-neutral-800"
+          >
             <MessageCircle className="h-4 w-4" />
             <span>Message</span>
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-gray-300 hover:bg-neutral-800">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full text-gray-300 hover:bg-neutral-800"
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 border-neutral-800 bg-neutral-900 text-gray-100">
-              <DropdownMenuItem className="hover:bg-neutral-800">View profile</DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-neutral-800">Mute</DropdownMenuItem>
+            <DropdownMenuContent
+              align="end"
+              className="w-40 border-neutral-800 bg-neutral-900 text-gray-100"
+            >
+              <DropdownMenuItem className="hover:bg-neutral-800">
+                View profile
+              </DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-neutral-800">
+                Mute
+              </DropdownMenuItem>
               <Separator className="my-1 bg-neutral-800" />
-              <DropdownMenuItem className="text-red-400 hover:bg-neutral-800">Remove friend</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-400 hover:bg-neutral-800">
+                Remove friend
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -348,5 +536,3 @@ function FriendRow({ friend }: { friend: Friend }) {
     </Card>
   );
 }
-
-
