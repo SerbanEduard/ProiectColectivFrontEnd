@@ -1,10 +1,34 @@
 import { Users, UserPlus, Settings, BookOpen, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo-clean.png";
+import { useLogout } from "@/services/react-query/auth";
+import { toast } from "sonner";
+
+const LOGOUT_FAILED_MESSAGE = "Logout failed";
 
 export default function HomePage() {
+  const navigate = useNavigate();
+  const { mutateAsync: logoutFunctionAsync, isPending } = useLogout();
+  
+  const handleLogout = async () => {
+    await toast.promise(
+      logoutFunctionAsync(),
+      {
+        loading: "Logging out...",
+        success: () => {
+          setTimeout(() => navigate('/login'), 600);
+          return "Logged out successfully!";
+        },
+        error: (err: unknown) => {
+          if (err instanceof Error) return err.message || LOGOUT_FAILED_MESSAGE;
+          return LOGOUT_FAILED_MESSAGE;
+        },
+      }
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-background">
       <header className="w-full px-6 py-4 border-b border-border">
@@ -29,12 +53,15 @@ export default function HomePage() {
                 <span>Friends</span>
               </Button>
             </Link>
-            <Link to="/settings">
+            <Link to="/edit-account-info">
               <Button variant="ghost" className="flex items-center gap-2">
                 <Settings className="size-5" />
                 <span>Settings</span>
               </Button>
             </Link>
+            <Button variant = "ghost" disabled={isPending} className="flex items-center gap-2" onClick={handleLogout}>
+              <span>Logout</span>
+            </Button>
           </nav>
         </div>
       </header>

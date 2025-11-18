@@ -12,6 +12,7 @@ import AddFriends from "./pages/private/AddFriends/AddFriends";
 import EditAccountInfo from "./pages/private/EditAccountInfo/EditAccountInfo";
 import PrivateRoutes from "./utils/PrivateRoutes";
 import AuthRoutes from "./utils/AuthRoutes";
+import TeamPage from "./pages/private/Teams/TeamPage";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/add-friends" element={<AddFriends />} />
             <Route path="/edit-account-info" element={<EditAccountInfo />} />
+            <Route path="/teams/:teamId" element={<TeamPage />} />
           </Route>
 
         </Routes>
