@@ -9,7 +9,6 @@ export const useGetTeams = () => {
     return useMutation<EntityTeam[], Error>({
         mutationFn: () => api.teamsGet().then(res=>res.data),
         onSuccess: (data: EntityTeam[]) => {
-            console.log("🚀 GET TEAMS RAW RESPONSE:", data);
             if (!data) return;
             const team = useTeamStore.getState();
             if(data) team.setTeams(data as EntityTeam[]);
@@ -36,7 +35,7 @@ export const useJoinTeam = () => {
     return useMutation<EntityTeam, Error, { teamId: string; userId: string }>(
         {
             mutationFn: ({ teamId, userId }) =>
-                api.teamsAddUserToTeamPut({
+                api.teamsUsersPut({
                     teamId,
                     userId
                 }).then(res => res.data),
