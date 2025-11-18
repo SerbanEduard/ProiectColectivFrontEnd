@@ -13,7 +13,22 @@ const fetchPendingRequestsForUser = async (
 ): Promise<EnrichedPending[]> => {
   const resp = await generatedApi.friendRequestsUserIdGet(userId);
   const data = (resp && (resp as any).data) || {};
-  const requests: DtoFriendRequestResponse[] = data.requests || [];
+
+  let requests: DtoFriendRequestResponse[] = [];
+
+  if (Array.isArray(data)) {
+    // cazul în care backend-ul întoarce direct un array
+    requests = data as DtoFriendRequestResponse[];
+  } else if (Array.isArray((data as any).requests)) {
+    // cazul vechi: { requests: [...] }
+    requests = (data as any).requests;
+  } else if (Array.isArray((data as any).pendingRequests)) {
+    // dacă backend-ul a fost schimbat să trimită { pendingRequests: [...] }
+    requests = (data as any).pendingRequests;
+  } else {
+    console.warn("Unexpected pending response shape:", data);
+    requests = [];
+  }
 
   const enriched = await Promise.all(
     requests.map(async (r) => {
@@ -29,6 +44,7 @@ const fetchPendingRequestsForUser = async (
 
   return enriched;
 };
+
 
 // GET pending requests
 export const useGetPendingRequests = () => {
