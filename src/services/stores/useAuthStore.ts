@@ -35,5 +35,9 @@ export const useAuthStore = create<AuthState>((set) => {
       set({user: u});
     },
 
-    logout: () => set({ user: undefined, token: undefined }),
+    logout: () => {
+      set({ user: undefined, token: undefined }),
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+    },
 }});

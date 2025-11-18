@@ -23,5 +23,15 @@ export const useLogin = () => {
   });
 };
 
+export const useLogout = () => {
+  return useMutation<void, Error, void>({
+    mutationFn: () => { return Promise.resolve(); },
+    onSuccess: () => {
+      const { logout : logoutFunction } = useAuthStore.getState();
+      logoutFunction();
+    }
+  });
+};
+
 
 
