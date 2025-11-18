@@ -9,7 +9,6 @@ export const useGetTeams = () => {
     return useMutation<EntityTeam[], Error>({
         mutationFn: () => api.teamsGet().then(res=>res.data),
         onSuccess: (data: EntityTeam[]) => {
-            console.log("🚀 GET TEAMS RAW RESPONSE:", data);
             if (!data) return;
             const team = useTeamStore.getState();
             if(data) team.setTeams(data as EntityTeam[]);
