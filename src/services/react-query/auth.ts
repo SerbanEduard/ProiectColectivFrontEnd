@@ -11,7 +11,6 @@ export const useSignup = () => {
 };
 
 export const useLogin = () => {
-  console.log("Login attempt");
   return useMutation<DtoLoginResponse, Error, DtoLoginRequest>({
     mutationFn: (data) => api.usersLoginPost(data).then(res => res.data),
     onSuccess: (data) => {
