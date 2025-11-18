@@ -1,12 +1,33 @@
 import { Users, UserPlus, Settings, BookOpen, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo-clean.png";
-import { useAuthStore } from "@/services/stores/useAuthStore";
+import { useLogout } from "@/services/react-query/auth";
+import { toast } from "sonner";
+
+const LOGOUT_FAILED_MESSAGE = "Logout failed";
 
 export default function HomePage() {
-  const logoutFunction = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
+  const { mutateAsync: logoutFunctionAsync, isPending } = useLogout();
+  
+  const handleLogout = async () => {
+    await toast.promise(
+      logoutFunctionAsync(),
+      {
+        loading: "Logging out...",
+        success: () => {
+          setTimeout(() => navigate('/login'), 600);
+          return "Logged out successfully!";
+        },
+        error: (err: unknown) => {
+          if (err instanceof Error) return err.message || LOGOUT_FAILED_MESSAGE;
+          return LOGOUT_FAILED_MESSAGE;
+        },
+      }
+    );
+  }
   
   return (
     <div className="min-h-screen bg-background">
@@ -38,10 +59,7 @@ export default function HomePage() {
                 <span>Settings</span>
               </Button>
             </Link>
-            <Button variant = "ghost" className="flex items-center gap-2" onClick={() => {
-              logoutFunction();
-              window.location.href = '/login';
-            }}>
+            <Button variant = "ghost" disabled={isPending} className="flex items-center gap-2" onClick={handleLogout}>
               <span>Logout</span>
             </Button>
           </nav>
