@@ -1,11 +1,32 @@
+import { SidebarProvider } from "@/components/ui/sidebar";
+import StatisticsSidebar from "./TrackProgressComponents/TrackProgressSidebar";
+import TrackProgressSidebarTrigger from "./TrackProgressComponents/TrackProgressSidebarTrigger";
+import TotalTimeSpent from "./TrackProgressComponents/TTimeSpent";
+import TimeSpentOnTeam from "./TrackProgressComponents/TeamTimeSpent";
+import type { ViewType } from "./TrackProgressComponents/StatisticsTypes";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 export default function TrackProgress() {
+
+  const [view, setView] = useState<ViewType>("totalTimeSpent");
+  const navigate = useNavigate();
+
+  const goToHome = () => {
+    navigate("/home");
+  }
+  
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Track Progress</h1>
-        <p className="text-muted-foreground">Pagina este în construcție</p>
+    <SidebarProvider defaultOpen={true}>
+      <StatisticsSidebar onSelect={setView} onGoToHome={goToHome}/>
+      <div className="flex flex-col w-full h-screen"> 
+        <TrackProgressSidebarTrigger />
+        <div className="flex-1 w-full">
+          {view === "totalTimeSpent" && <TotalTimeSpent />}
+          {view === "timeSpentOnTeams" && <TimeSpentOnTeam />}
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
 
