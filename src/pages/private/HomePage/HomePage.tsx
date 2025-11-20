@@ -1,4 +1,4 @@
-import { Users, UserPlus, Settings, BookOpen, TrendingUp } from "lucide-react";
+import { Users, UserPlus, Settings, BookOpen, TrendingUp, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
@@ -60,6 +60,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Button variant = "ghost" disabled={isPending} className="flex items-center gap-2" onClick={handleLogout}>
+              <LogOut className="size-5" />
               <span>Logout</span>
             </Button>
           </nav>
@@ -105,7 +106,7 @@ export default function HomePage() {
             </Card>
           </Link>
 
-          <Link to="/track-progress" className="block">
+          <Link to="/statistics" className="block">
             <Card className="bg-card hover:bg-accent transition-colors cursor-pointer h-full">
               <CardHeader className="flex flex-col items-center text-center gap-4">
                 <div className="p-4 rounded-lg bg-muted">

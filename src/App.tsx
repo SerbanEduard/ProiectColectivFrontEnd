@@ -33,7 +33,7 @@ function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/study-teams" element={<StudyTeams />} />
             <Route path="/shared-resources" element={<SharedResources />} />
-            <Route path="/track-progress" element={<TrackProgress />} />
+            <Route path="/statistics" element={<TrackProgress />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/add-friends" element={<AddFriends />} />
