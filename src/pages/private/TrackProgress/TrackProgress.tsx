@@ -3,26 +3,57 @@ import StatisticsSidebar from "./TrackProgressComponents/TrackProgressSidebar";
 import TrackProgressSidebarTrigger from "./TrackProgressComponents/TrackProgressSidebarTrigger";
 import TotalTimeSpent from "./TrackProgressComponents/TTimeSpent";
 import TimeSpentOnTeam from "./TrackProgressComponents/TeamTimeSpent";
-import type { StatisticsResponse, ViewType } from "./TrackProgressComponents/StatisticsTypes";
-import { useEffect, useState } from "react";
+import type { ViewType } from "./TrackProgressComponents/StatisticsTypes";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useGetUserStatistics } from "@/services/react-query/user";
+import { toast } from "sonner";
+import axios from "axios";
+import { useAuthStore } from "@/services/stores/useAuthStore";
+import { useStatisticsStore } from "@/services/stores/useStatisticsStore";
   
-const MOCK_TIME_SPENT = 7200000; // 10 hours in milliseconds
+const FAILED_FATCHED_STATS = "Failed to fetch statistics.";
 
 export default function TrackProgress() {
 
   const [cards, setCards] = useState<Array<{ id: string; type: ViewType }>>([]);
-  const [stats, setStats] = useState<StatisticsResponse | null>(null);
+  const { user: authUser } = useAuthStore();
+  const { stats: userStats } = useStatisticsStore();
   const navigate = useNavigate();
+  const hasFetched = useRef(false);
 
-  const getStats = async () => {
-    setStats({
-      totalTimeSpentOnApp: MOCK_TIME_SPENT, 
-      totalTimeSpentPerTeam: []
-    });
-    // Placeholder for fetching statistics data
-    // In a real application, you would fetch this data from an API
-  }
+  const { mutateAsync: getUserStatsAsync } = useGetUserStatistics();
+  
+  useEffect(() => {
+    const id = authUser?.id;
+    
+    if (!id || hasFetched.current) return;
+
+    hasFetched.current = true;
+
+    const fetchStats = async () => {
+      await toast.promise(
+        getUserStatsAsync({ id: id as string }),
+        {
+          loading: "Loading statistics...",
+          success: () => "Statistics loaded successfully!",
+          error: (err: unknown) => {
+            if (axios.isAxiosError(err)) {
+              const status = err.response?.status;
+              if (status === 401) return "Unauthorized";
+              if (status === 404) return "User not found";
+              if (status === 500) return "Server error";
+              return err.response?.data?.message || err.message || FAILED_FATCHED_STATS;
+            }
+            if (err instanceof Error) return err.message || FAILED_FATCHED_STATS;
+            return FAILED_FATCHED_STATS;
+          }
+        }
+      );
+    };
+
+    fetchStats();
+  }, [authUser?.id, getUserStatsAsync]);
 
   const goToHome = () => {
     navigate("/home");
@@ -43,10 +74,6 @@ export default function TrackProgress() {
   const milisecondToMinutes = (ms: number) => {
     return Math.floor(ms / 60000);
   }
-
-  useEffect(() => {
-    getStats();
-  }, []);
   
   return (
     <SidebarProvider defaultOpen={true}>
@@ -60,9 +87,13 @@ export default function TrackProgress() {
                 {card.type === "totalTimeSpent" && 
                   <TotalTimeSpent 
                     onClose={() => removeCard(card.id)} 
-                    time={milisecondToMinutes(stats ? stats.totalTimeSpentOnApp : 0)} 
+                    time={milisecondToMinutes(userStats?.totalTimeSpentOnApp ?? 0)} 
                   /> }
-                {card.type === "timeSpentOnTeams" && <TimeSpentOnTeam onClose={() => removeCard(card.id)} />}
+                {card.type === "timeSpentOnTeams" && 
+                  <TimeSpentOnTeam 
+                    onClose={() => removeCard(card.id)} 
+                    data={userStats?.timeSpentOnTeams ?? []}
+                  /> }
               </div>
             ))}
           </div>
