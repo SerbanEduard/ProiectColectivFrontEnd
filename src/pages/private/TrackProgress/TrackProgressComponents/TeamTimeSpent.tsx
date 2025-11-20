@@ -2,19 +2,36 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
+import type { ModelTimeSpentOnTeam } from '@/api/api'
 
 interface TimeSpentOnTeamProps {
+  data: Array<ModelTimeSpentOnTeam>;
   onClose: () => void;
 }
 
-export default function TimeSpentOnTeam({ onClose }: TimeSpentOnTeamProps) {
+export default function TimeSpentOnTeam({ onClose, data }: TimeSpentOnTeamProps) {
   const [isExiting, setIsExiting] = useState(false);
+  const [visibleItems, setVisibleItems] = useState<number[]>([]);
 
   const handleClose = () => {
     setIsExiting(true);
     setTimeout(() => {
       onClose();
     }, 300);
+  };
+
+  useEffect(() => {
+    data.forEach((_, index) => {
+      setTimeout(() => {
+        setVisibleItems(prev => [...prev, index]);
+      }, index * 200);
+    });
+  }, [data]);
+
+  const milisecondsToHoursMinutes = (ms: number) => {
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    return `${hours}h ${minutes}m`;
   };
 
   useEffect(() => {
@@ -71,8 +88,33 @@ export default function TimeSpentOnTeam({ onClose }: TimeSpentOnTeamProps) {
           <CardTitle>Time Spent on Teams</CardTitle>
         </CardHeader>
         <CardContent className="max-h-96 overflow-y-auto">
-          <p>Your time spent on each team will appear here. (in progress)</p>
-          <p className="mt-2">See detailed breakdown of your time allocation across different teams.</p>
+          <div className="flex flex-col gap-4">
+            {data.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No team data available</p>
+            ) : (
+              data.map((team, index) => (
+                <div
+                  key={team.teamId}
+                  className={`flex justify-between items-center p-4 rounded-lg bg-muted/50 transition-all duration-500 ${
+                    visibleItems.includes(index) 
+                      ? 'opacity-100 translate-y-0' 
+                      : 'opacity-0 translate-y-4'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{team.teamId}</span>
+                    <span className="text-sm text-muted-foreground">Team ID</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-2xl font-bold text-primary">
+                      {milisecondsToHoursMinutes(team.duration ?? 0)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">Time spent</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
       <div className='blob absolute top-0 left-0 size-20 rounded-full bg-sky-600/60 opacity-0 blur-2xl transition-all duration-300 ease-in-out dark:bg-sky-400/60' />
