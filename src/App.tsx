@@ -13,6 +13,8 @@ import EditAccountInfo from "./pages/private/EditAccountInfo/EditAccountInfo";
 import PrivateRoutes from "./utils/PrivateRoutes";
 import AuthRoutes from "./utils/AuthRoutes";
 import TeamPage from "./pages/private/Teams/TeamPage";
+import SolveQuiz from "./pages/private/Teams/TeamPageComponents/SolveQuiz";
+import CreateQuiz from "./pages/private/Teams/TeamPageComponents/CreateQuiz";
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
             <Route path="/add-friends" element={<AddFriends />} />
             <Route path="/edit-account-info" element={<EditAccountInfo />} />
             <Route path="/teams/:teamId" element={<TeamPage />} />
+            <Route path="/teams/:teamId/quizzes/create" element={<CreateQuiz />} />
+            <Route path="/teams/:teamId/quizzes/:quizId/solve" element={<SolveQuiz />} />
           </Route>
 
         </Routes>
