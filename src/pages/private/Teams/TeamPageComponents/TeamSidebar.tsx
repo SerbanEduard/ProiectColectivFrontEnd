@@ -13,10 +13,10 @@ import {
   SidebarMenuSub,
 } from "@/components/ui/sidebar";
 import { Collapsible } from "@radix-ui/react-collapsible";
-import { AudioLines, CalendarClock, CalendarDays, ChevronDown, ChevronUp, FolderClosed, LayoutDashboard, MessageSquareText, UsersRound } from "lucide-react";
+import { BookOpenText ,AudioLines, CalendarClock, CalendarDays, ChevronDown, ChevronUp, FolderClosed, LayoutDashboard, MessageSquareText, UsersRound } from "lucide-react";
 import { useState } from "react";
 
-export function MySidebar() {
+export function MySidebar({ onSelect }: { onSelect: (key: string) => void }) {
   const [chatsAreOpen, setChatsAreOpen] = useState(false);
   const [voicesAreOpen, setVoicesAreOpen] = useState(false);
 
@@ -40,7 +40,7 @@ export function MySidebar() {
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel onClick={() => onSelect('dashboard')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
                   <div className="flex items-center gap-8 text-xl">
                     <LayoutDashboard/>
                     Dashboard
@@ -72,12 +72,12 @@ export function MySidebar() {
               <SidebarGroupContent>
                   <SidebarMenuSub className="gap-y-2">
                   {chatRooms.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <div>
-                          {item.title}
-                        </div>
-                      </SidebarMenuButton>
+                      <SidebarMenuItem key={item.title} onClick={()=> onSelect(`chat:${item.title}`)}>
+                        <SidebarMenuButton asChild>
+                          <div>
+                            {item.title}
+                          </div>
+                        </SidebarMenuButton>
                       </SidebarMenuItem>
                   ))}
                   </SidebarMenuSub>
@@ -109,16 +109,16 @@ export function MySidebar() {
               <SidebarGroupContent>
                   <SidebarMenuSub className="gap-y-3">
                   {voiceRooms.map((item) => (
-                      <SidebarMenuItem className="cursor-pointer" key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <div className="justify-between">
-                          <p className="line-clamp-1">{item.title}</p>
-                          <div className="flex items-center gap-1">
-                          {item.peopleOn}
-                          <UsersRound size={20}/>
+                      <SidebarMenuItem className="cursor-pointer" key={item.title} onClick={()=> onSelect(`voice:${item.title}`)}>
+                        <SidebarMenuButton asChild>
+                          <div className="justify-between">
+                            <p className="line-clamp-1">{item.title}</p>
+                            <div className="flex items-center gap-1">
+                              {item.peopleOn}
+                              <UsersRound size={20}/>
+                            </div>
                           </div>
-                        </div>
-                      </SidebarMenuButton>
+                        </SidebarMenuButton>
                       </SidebarMenuItem>
                   ))}
                   </SidebarMenuSub>
@@ -128,7 +128,7 @@ export function MySidebar() {
           </Collapsible>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel onClick={() => onSelect('files')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
                   <div className="flex items-center gap-10">
                     <FolderClosed/>
                     Team Files
@@ -138,7 +138,7 @@ export function MySidebar() {
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel onClick={() => onSelect('events')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
                   <div className="flex items-center gap-10">
                     <CalendarClock/>
                     Events
@@ -148,10 +148,20 @@ export function MySidebar() {
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel onClick={() => onSelect('calendar')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
                   <div className="flex items-center gap-10">
                     <CalendarDays/>
                     Calendar
+                  </div>
+                </SidebarGroupLabel>     
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarGroupLabel onClick={() => onSelect('quizzes')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+                  <div className="flex items-center gap-10">
+                    <BookOpenText/>
+                    Quizzes
                   </div>
                 </SidebarGroupLabel>     
             </SidebarGroupContent>
