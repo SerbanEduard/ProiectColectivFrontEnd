@@ -17,8 +17,9 @@ export default defineConfig({
     proxy: {
       '/api': {
         //NU SCHIMBA ACEST URL
-        target: 'http://localhost:8080',
+        target: 'ws://localhost:8080',
         changeOrigin: true,
+        ws: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },

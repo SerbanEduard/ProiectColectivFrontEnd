@@ -11,36 +11,88 @@ import {
   SidebarHeader,
   SidebarFooter,
   SidebarMenuSub,
+  SidebarMenu,
 } from "@/components/ui/sidebar";
 import { Collapsible } from "@radix-ui/react-collapsible";
-import { AudioLines, CalendarClock, CalendarDays, ChevronDown, ChevronUp, FolderClosed, LayoutDashboard, MessageSquareText, UsersRound } from "lucide-react";
+import { AudioLines, CalendarClock, CalendarDays, ChevronDown, ChevronUp, FolderClosed, LayoutDashboard, MessageSquareText, UsersRound, X } from "lucide-react";
 import { useState } from "react";
+import logo from "@/assets/home.png"
+import { useNavigate } from "react-router-dom";
+import { DropdownMenu, DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+import { DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useTeamStore } from "@/services/stores/useTeamStore";
+import type { Screen } from "../../TeamPage";
 
-export function MySidebar() {
+// Interface for TeamSidebar props
+export interface TeamSidebarProps {
+  openScreenFn: (screen: Screen, roomId?: number) => void;
+}
+
+export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
   const [chatsAreOpen, setChatsAreOpen] = useState(false);
   const [voicesAreOpen, setVoicesAreOpen] = useState(false);
+  const [topMenuOpen, setTopMenuOpen] = useState(false);
+  const { openTeam } = useTeamStore()
 
   const chatRooms = [
-    { title: "Announcement"},
     { title: "General"},
-    { title: "Memes"},
   ]
 
   const voiceRooms = [
     { title: "General", peopleOn:10},
-    { title: "Daily Meeting Room", peopleOn:3},
-    { title: "Relaxing", peopleOn:4}
   ]
+
+  const navigate = useNavigate();
 
   return (
     <Sidebar variant="floating">
         <SidebarHeader>
-            HEADER
+          <SidebarMenu>
+            <SidebarMenuItem
+              className="cursor-pointer"
+            >
+              <DropdownMenu onOpenChange={(open) => setTopMenuOpen(open)} >
+                <DropdownMenuTrigger asChild>
+                  <div className="flex border-b rounded-lg w-full justify-center items-center font-light">
+                    <p className="m-2 select-none font-medium my-3">
+                      {openTeam?.name}
+                    </p>
+                    { topMenuOpen &&
+                      <X size={20}/>
+                    }
+                    { !topMenuOpen &&
+                      <ChevronDown size={20}/>
+                    }
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"ghost"}
+                    >
+                      Team setting 1
+                    </Button>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button
+                      variant={"ghost"}
+                    >
+                      Team setting 2
+                    </Button>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer"
+                onClick={() => openScreenFn("Dashboard")}
+              >
                   <div className="flex items-center gap-8 text-xl">
                     <LayoutDashboard/>
                     Dashboard
@@ -71,8 +123,11 @@ export function MySidebar() {
               <CollapsibleContent>
               <SidebarGroupContent>
                   <SidebarMenuSub className="gap-y-2">
-                  {chatRooms.map((item) => (
-                      <SidebarMenuItem key={item.title}>
+                  {chatRooms.map((item) => (    // Momentan orice chat room duce la general 
+                      <SidebarMenuItem className="cursor-pointer" 
+                        key={item.title}
+                        onClick={() => openScreenFn("ChatRoom",0)}
+                      >
                       <SidebarMenuButton asChild>
                         <div>
                           {item.title}
@@ -157,8 +212,13 @@ export function MySidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-            FOOTER
+        <SidebarFooter className="border rounded-t-4xl hover:bg-accent cursor-pointer"
+          onClick={() => navigate("/home")}
+        >
+          <div className=" flex items-center justify-center gap-x-2 pr-5">
+            <img src={logo} alt="StudyFlow logo" className="h-7 w-auto" />
+            <p>Home</p>
+          </div>
         </SidebarFooter>
     </Sidebar>
   );
