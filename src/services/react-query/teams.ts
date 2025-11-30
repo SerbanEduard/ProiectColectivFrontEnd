@@ -1,5 +1,5 @@
 import {useMutation} from "@tanstack/react-query";
-import type {ControllerMessageRequestUnion, DtoMessageDTO, DtoTeamMessageRequest, DtoTeamRequest, EntityTeam} from "@/api";
+import type {ControllerMessageRequestUnion, DtoAddUserToTeamResponse, DtoMessageDTO, DtoTeamMessageRequest, DtoTeamRequest, EntityTeam} from "@/api";
 import { api } from './api'
 import {useTeamStore} from "@/services/stores/useTeamStore.ts";
 import { useAuthStore } from "../stores/useAuthStore";
@@ -33,7 +33,7 @@ export const useAddTeam = () => {
 }
 
 export const useJoinTeam = () => {
-    return useMutation<EntityTeam, Error, { teamId: string; userId: string }>(
+    return useMutation<DtoAddUserToTeamResponse, Error, { teamId: string; userId: string }>(
         {
             mutationFn: ({ teamId, userId }) =>
                 api.teamsUsersPut({
@@ -43,7 +43,7 @@ export const useJoinTeam = () => {
 
             onSuccess: (updatedTeam) => {
                 const store = useTeamStore.getState();
-                store.updateTeam(updatedTeam);
+                store.updateTeam(updatedTeam.team!);
             },
 
             onError: (err) => {
