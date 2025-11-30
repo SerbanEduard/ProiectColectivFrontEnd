@@ -1,0 +1,20 @@
+For the 0-10% part:
+    Formula: normalizedProgress² × 0.01
+    normalizedProgress = progress / 0.1 (converts 0-0.1 range to 0-1)
+    Squaring makes it start very slowly (quadratic acceleration)
+    × 0.01 ensures we only reach 1% of total value by 10% progress
+For the 10-90% part:
+    Formula: 0.01 + middleProgress × 0.98
+    middleProgress = (progress - 0.1) / 0.8 (converts 0.1-0.9 range to 0-1)
+    Linear progression through middle 80% of time
+    × 0.98 means we cover 98% of value (from 1% to 99%)
+    + 0.01 starts from where the slow start ended (1%)
+    NOTE: This happens in only 80% of the time but covers 98% of the value
+    To make it 2x faster, we use a quadratic function
+For the 90-100% part:
+    Formula: 0.99 + (1 - (1 - endProgress)³) × 0.01
+    endProgress = (progress - 0.9) / 0.1 (converts 0.9-1 range to 0-1)
+    (1 - endProgress)³ creates cubic deceleration (very slow approach)
+    1 - that value inverts it to grow from 0 to 1
+    × 0.01 limits the last 10% to only add 1% more value
+    + 0.99 starts from 99% (where middle section ended)

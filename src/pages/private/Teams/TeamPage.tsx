@@ -7,6 +7,7 @@ import { useOpenTeam } from "@/services/react-query/teams";
 import { useEffect, useState } from "react";
 import { TeamChatRoom } from "./TeamPageComponents/TeamChatRoom";
 import { Card } from "@/components/ui/card";
+import TeamQuizzes from "./TeamPageComponents/TeamQuizzes";
 
 export type Screen =
     "Dashboard" |
