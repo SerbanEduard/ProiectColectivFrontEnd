@@ -10,7 +10,8 @@ export function useMessageSocket(token : string, onTeam : boolean) {
   useEffect(() => {
     if (!token) return;
 
-    const ws = new WebSocket(`ws://${WSPATH}/messages/connect?token=${token}`,);
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${protocol}://${WSPATH}/messages/connect?token=${token}`);
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
