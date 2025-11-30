@@ -9,7 +9,7 @@ export function TeamSidebarTrigger() {
     <Button
       onClick={toggleSidebar}
       variant="ghost"
-      className="top-2 w-12 h-12 p-0 absolute items-center"
+      className="top-1.5 w-12 h-12 ml-2 absolute items-center"
       aria-label="Toggle Sidebar"
     >
       {open ? (

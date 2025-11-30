@@ -1,51 +1,74 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { MySidebar } from "./TeamPageComponents/TeamSidebar";
-import { TeamSidebarTrigger } from "./TeamPageComponents/TeamSidebarTrigger";
+import { TeamSidebar } from "./TeamPageComponents/Sidebar/TeamSidebar";
+import { TeamSidebarTrigger } from "./TeamPageComponents/Sidebar/TeamSidebarTrigger";
 import { TeamDashboard } from "./TeamPageComponents/TeamDashboard";
-import { useState, useMemo } from "react";
+import { useOpenTeam } from "@/services/react-query/teams";
+import { useEffect, useState } from "react";
+import { TeamChatRoom } from "./TeamPageComponents/TeamChatRoom";
+import { Card } from "@/components/ui/card";
 import TeamQuizzes from "./TeamPageComponents/TeamQuizzes";
 
+export type Screen =
+    "Dashboard" |
+    "ChatRoom"  |
+    "VoiceRoom" |
+    "Files"     |
+    "Events"    |
+    "Calendar"  |
+    "Quizzes"
 
-function TeamFiles({teamId}:{teamId:string}) { return <div className="p-6">Files for team {teamId}</div>; }
-function TeamEvents({teamId}:{teamId:string}) { return <div className="p-6">Events for team {teamId}</div>; }
-function TeamCalendar({teamId}:{teamId:string}) { return <div className="p-6">Calendar for team {teamId}</div>; }
-function ChatRoom({room}:{room:string}) { return <div className="p-6">Chat Room: {room}</div>; }
-function VoiceRoom({room}:{room:string}) { return <div className="p-6">Voice Room: {room}</div>; }
 
 export default function TeamPage() {
     const { teamId } = useParams<{teamId: string}>(); 
+    const { mutate : openTeam} = useOpenTeam();
+    const navigate = useNavigate();
 
-    const [selected, setSelected] = useState<string>('dashboard');
+    const [openScreen , setOpenScreen] = useState<Screen>("Dashboard");
+    const [roomId, setRoomId] = useState<number>(-1);
 
-    const content = useMemo(() => {
-        if (!teamId) return null;
-        if (selected.startsWith('chat:')) return <ChatRoom room={selected.split(':')[1]} />;
-        if (selected.startsWith('voice:')) return <VoiceRoom room={selected.split(':')[1]} />;
-        switch (selected) {
-            case 'dashboard': return <TeamDashboard teamId={teamId} />;
-            case 'files': return <TeamFiles teamId={teamId} />;
-            case 'events': return <TeamEvents teamId={teamId} />;
-            case 'calendar': return <TeamCalendar teamId={teamId} />;
-            case 'quizzes': return <TeamQuizzes teamId={teamId} />;
-            default: return <TeamDashboard teamId={teamId} />;
+    const changeOpenScreen = (screenToOpen: Screen, roomId?: number) => {
+        if(roomId !== undefined)
+            setRoomId(roomId)
+
+        setOpenScreen(screenToOpen)
+    }
+
+
+    useEffect(()=>{
+        if( !teamId )
+        {
+            navigate("/home")
+            return
         }
-    }, [selected, teamId]);
+
+        openTeam({teamId})
+    },[])
 
     return(
         <SidebarProvider>
-            <MySidebar onSelect={setSelected} />
-            <div className="flex flex-col w-full h-screen">
-                <div className="flex flex-col w-full flex-1">
+            <TeamSidebar 
+                openScreenFn={changeOpenScreen}
+            />
+                <div className="flex flex-col w-fit flex-1">
                     <TeamSidebarTrigger />
-                    <div className="border w-full h-16">
+                    <div className="flex w-full h-16 items-center">
+                        <Card className="w-full rounded-r-full bg-background mx-2">
 
+                        </Card>
                     </div>
-                    <div className="flex-1 w-full overflow-auto">
-                        {content}
+                    <div className="flex w-full h-full mb-1.5">
+                        {openScreen == "Dashboard" && 
+                            <TeamDashboard teamId={teamId!}/>
+                        }
+                        {openScreen == "ChatRoom" &&
+                            <TeamChatRoom roomId={roomId}/>
+                        }
+                        {openScreen == "Quizzes" &&
+                            <TeamQuizzes teamId={teamId!}/>
+                        }
                     </div>
                 </div>
-            </div>
         </SidebarProvider>
     )
 }
