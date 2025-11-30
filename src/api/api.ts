@@ -23,6 +23,40 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
+export interface ControllerMessageRequestUnion {
+    'direct'?: DtoDirectMessageRequest;
+    'team'?: DtoTeamMessageRequest;
+}
+export interface ControllerRoomResponse {
+    'createdAt'?: number;
+    'createdBy'?: string;
+    'id'?: string;
+    'name'?: string;
+    'teamId'?: string;
+    'type'?: string;
+    'userCount'?: number;
+}
+export interface DtoAddUserToTeamResponse {
+    'team'?: EntityTeam;
+    'user'?: EntityUser;
+}
+export interface DtoCreateQuizResponse {
+    'quiz_id'?: string;
+}
+export interface DtoDirectMessageRequest {
+    'receiverId'?: string;
+    'senderId'?: string;
+    'textContent'?: string;
+}
+export interface DtoFriendRequestListResponse {
+    'requests'?: Array<DtoFriendRequestResponse>;
+}
+export interface DtoFriendRequestResponse {
+    'createdAt'?: string;
+    'fromUserId'?: string;
+    'status'?: string;
+    'toUserId'?: string;
+}
 export interface DtoLoginRequest {
     'email'?: string;
     'password'?: string;
@@ -33,6 +67,35 @@ export interface DtoLoginResponse {
     'expiresIn'?: string;
     'tokenType'?: string;
     'user'?: DtoUserResponse;
+}
+export interface DtoMessageDTO {
+    'id'?: string;
+    'receiverId'?: string;
+    'sender'?: DtoSenderDTO;
+    'sentAt'?: string;
+    'teamId'?: string;
+    'textContent'?: string;
+}
+export interface DtoReadQuizQuestionResponse {
+    'question'?: string;
+    'quiz_options'?: Array<string>;
+    'quiz_question_id'?: string;
+}
+export interface DtoReadQuizResponse {
+    'quiz_id'?: string;
+    'quiz_questions'?: Array<DtoReadQuizQuestionResponse>;
+    'quiz_title'?: string;
+}
+export interface DtoRespondFriendRequestRequest {
+    'accept'?: boolean;
+}
+export interface DtoSenderDTO {
+    'email'?: string;
+    'firstname'?: string;
+    'id'?: string;
+    'lastname'?: string;
+    'topicsOfInterest'?: Array<ModelTopicOfInterest>;
+    'username'?: string;
 }
 export interface DtoSignUpUserRequest {
     'email'?: string;
@@ -46,6 +109,32 @@ export interface DtoSignUpUserResponse {
     'firstname'?: string;
     'lastname'?: string;
     'username'?: string;
+}
+export interface DtoSolveQuestionRequest {
+    'answer'?: Array<string>;
+    'quiz_question_id'?: string;
+}
+export interface DtoSolveQuestionResponse {
+    'correct_fields'?: Array<string>;
+    'is_correct'?: boolean;
+    'quiz_question_id'?: string;
+}
+export interface DtoSolveQuizRequest {
+    'attempts'?: Array<DtoSolveQuestionRequest>;
+}
+export interface DtoSolveQuizResponse {
+    'is_correct'?: boolean;
+    'questions_answers'?: Array<DtoSolveQuestionResponse>;
+}
+export interface DtoStatisticsResponse {
+    'timeSpentOnTeams'?: Array<ModelTimeSpentOnTeam>;
+    'totalTimeSpentOnApp'?: number;
+    'userId'?: string;
+}
+export interface DtoTeamMessageRequest {
+    'senderId'?: string;
+    'teamId'?: string;
+    'textContent'?: string;
 }
 export interface DtoTeamRequest {
     'description'?: string;
@@ -61,10 +150,10 @@ export interface DtoUpdateStatisticsRequest {
     'timeSpentOnApp'?: number;
     'timeSpentOnTeam'?: number;
 }
-export interface DtoUpdateStatisticsResponse {
-    'timeSpentOnTeams'?: Array<ModelTimeSpentOnTeam>;
-    'totalTimeSpentOnApp'?: number;
-    'userId'?: string;
+export interface DtoUserPasswordRequestDTO {
+    'id'?: string;
+    'newPassword'?: string;
+    'oldPassword'?: string;
 }
 export interface DtoUserResponse {
     'email'?: string;
@@ -79,6 +168,40 @@ export interface DtoUserResponse {
 export interface DtoUserToTeamRequest {
     'teamId': string;
     'userId': string;
+}
+export interface DtoUserUpdateRequestDTO {
+    'email'?: string;
+    'firstname'?: string;
+    'lastname'?: string;
+    'topicsOfInterest'?: Array<ModelTopicOfInterest>;
+    'username'?: string;
+}
+export interface DtoUserUpdateResponseDTO {
+    'email'?: string;
+    'firstname'?: string;
+    'id'?: string;
+    'lastname'?: string;
+    'statistics'?: ModelStatistics;
+    'teams'?: Array<string>;
+    'topicsOfInterest'?: Array<ModelTopicOfInterest>;
+    'username'?: string;
+}
+export interface EntityQuestion {
+    'answers'?: Array<string>;
+    'id'?: string;
+    'options'?: Array<string>;
+    'question'?: string;
+    'type'?: ModelQuizType;
+}
+
+
+export interface EntityQuiz {
+    'id'?: string;
+    'questions'?: Array<EntityQuestion>;
+    'quiz_name'?: string;
+    'team_id'?: string;
+    'user_id'?: string;
+    'user_team_id'?: string;
 }
 export interface EntityTeam {
     'description'?: string;
@@ -101,6 +224,23 @@ export interface EntityUser {
     'topicsOfInterest'?: Array<ModelTopicOfInterest>;
     'username'?: string;
 }
+export interface EntityVoiceRoom {
+    'createdAt'?: number;
+    'createdBy'?: string;
+    'id'?: string;
+    'name'?: string;
+    'teamId'?: string;
+    'type'?: string;
+}
+
+export const ModelQuizType = {
+    MultipleChoice: 'multiple_choice',
+    TrueFalse: 'true_false'
+} as const;
+
+export type ModelQuizType = typeof ModelQuizType[keyof typeof ModelQuizType];
+
+
 export interface ModelStatistics {
     'timeSpentOnTeams'?: Array<ModelTimeSpentOnTeam>;
     'totalTimeSpentOnApp'?: number;
@@ -130,6 +270,635 @@ export type ModelTopicOfInterest = typeof ModelTopicOfInterest[keyof typeof Mode
  */
 export const DefaultApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * Middleware to verify JWT token from Authorization header or query parameter
+         * @summary JWT Authentication Middleware
+         * @param {string} [authorization] Bearer token
+         * @param {string} [token] Token for WebSocket connections
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authMiddlewarePost: async (authorization?: string, token?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/auth/middleware`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (token !== undefined) {
+                localVarQueryParameter['token'] = token;
+            }
+
+
+    
+            if (authorization != null) {
+                localVarHeaderParameter['Authorization'] = String(authorization);
+            }
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Middleware to ensure the authenticated user matches the resource owner
+         * @summary Owner Authorization Middleware
+         * @param {string} id Resource ID that must match authenticated user ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authOwnerIdPost: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('authOwnerIdPost', 'id', id)
+            const localVarPath = `/auth/owner/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Send a friend request from one user to another
+         * @summary Send a friend request
+         * @param {string} fromUserId Sender User ID
+         * @param {string} toUserId Recipient User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        friendRequestsFromUserIdToUserIdPost: async (fromUserId: string, toUserId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'fromUserId' is not null or undefined
+            assertParamExists('friendRequestsFromUserIdToUserIdPost', 'fromUserId', fromUserId)
+            // verify required parameter 'toUserId' is not null or undefined
+            assertParamExists('friendRequestsFromUserIdToUserIdPost', 'toUserId', toUserId)
+            const localVarPath = `/friend-requests/{fromUserId}/{toUserId}`
+                .replace(`{${"fromUserId"}}`, encodeURIComponent(String(fromUserId)))
+                .replace(`{${"toUserId"}}`, encodeURIComponent(String(toUserId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Accept or deny a friend request
+         * @summary Respond to a friend request
+         * @param {string} fromUserId Sender User ID
+         * @param {string} toUserId Recipient User ID
+         * @param {DtoRespondFriendRequestRequest} body Accept or deny
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        friendRequestsFromUserIdToUserIdPut: async (fromUserId: string, toUserId: string, body: DtoRespondFriendRequestRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'fromUserId' is not null or undefined
+            assertParamExists('friendRequestsFromUserIdToUserIdPut', 'fromUserId', fromUserId)
+            // verify required parameter 'toUserId' is not null or undefined
+            assertParamExists('friendRequestsFromUserIdToUserIdPut', 'toUserId', toUserId)
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('friendRequestsFromUserIdToUserIdPut', 'body', body)
+            const localVarPath = `/friend-requests/{fromUserId}/{toUserId}`
+                .replace(`{${"fromUserId"}}`, encodeURIComponent(String(fromUserId)))
+                .replace(`{${"toUserId"}}`, encodeURIComponent(String(toUserId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Get pending friend requests for a user
+         * @summary Get pending friend requests
+         * @param {string} userId User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        friendRequestsUserIdGet: async (userId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('friendRequestsUserIdGet', 'userId', userId)
+            const localVarPath = `/friend-requests/{userId}`
+                .replace(`{${"userId"}}`, encodeURIComponent(String(userId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Connect the user to the message WebSocket
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesConnectGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/messages/connect`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Get messages between 2 users or within a team
+         * @summary Get all messages
+         * @param {string} type Messages type (direct/team)
+         * @param {string} [user1Id] User1 ID (direct message)
+         * @param {string} [user2Id] User2 ID (direct message)
+         * @param {string} [teamId] Team ID (team message)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesGet: async (type: string, user1Id?: string, user2Id?: string, teamId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'type' is not null or undefined
+            assertParamExists('messagesGet', 'type', type)
+            const localVarPath = `/messages`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (type !== undefined) {
+                localVarQueryParameter['type'] = type;
+            }
+
+            if (user1Id !== undefined) {
+                localVarQueryParameter['user1Id'] = user1Id;
+            }
+
+            if (user2Id !== undefined) {
+                localVarQueryParameter['user2Id'] = user2Id;
+            }
+
+            if (teamId !== undefined) {
+                localVarQueryParameter['teamId'] = teamId;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a message by ID
+         * @param {string} id The message ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesIdGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('messagesIdGet', 'id', id)
+            const localVarPath = `/messages/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Create and send a message either to another user or to a team
+         * @summary Create and send a message
+         * @param {string} type Message type (direct/team)
+         * @param {ControllerMessageRequestUnion} request The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesPost: async (type: string, request: ControllerMessageRequestUnion, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'type' is not null or undefined
+            assertParamExists('messagesPost', 'type', type)
+            // verify required parameter 'request' is not null or undefined
+            assertParamExists('messagesPost', 'request', request)
+            const localVarPath = `/messages`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (type !== undefined) {
+                localVarQueryParameter['type'] = type;
+            }
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a quiz with answers
+         * @param {string} id The id for quiz
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesIdGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('quizzesIdGet', 'id', id)
+            const localVarPath = `/quizzes/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a quiz without answers
+         * @param {string} id The id for quiz
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesIdTestGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('quizzesIdTestGet', 'id', id)
+            const localVarPath = `/quizzes/{id}/test`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Solve a quiz
+         * @param {string} id The id for quiz
+         * @param {DtoSolveQuizRequest} request The solve quiz request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesIdTestPost: async (id: string, request: DtoSolveQuizRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('quizzesIdTestPost', 'id', id)
+            // verify required parameter 'request' is not null or undefined
+            assertParamExists('quizzesIdTestPost', 'request', request)
+            const localVarPath = `/quizzes/{id}/test`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Create a new quiz
+         * @param {EntityQuiz} request The create quiz request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesPost: async (request: EntityQuiz, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'request' is not null or undefined
+            assertParamExists('quizzesPost', 'request', request)
+            const localVarPath = `/quizzes`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get quizzes by team with pagination
+         * @param {string} teamId Team ID
+         * @param {number} [pageSize] Page size (default 10)
+         * @param {string} [lastKey] Last key for pagination
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesTeamTeamIdGet: async (teamId: string, pageSize?: number, lastKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'teamId' is not null or undefined
+            assertParamExists('quizzesTeamTeamIdGet', 'teamId', teamId)
+            const localVarPath = `/quizzes/team/{teamId}`
+                .replace(`{${"teamId"}}`, encodeURIComponent(String(teamId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['pageSize'] = pageSize;
+            }
+
+            if (lastKey !== undefined) {
+                localVarQueryParameter['lastKey'] = lastKey;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get quizzes by user with pagination
+         * @param {string} userId User ID
+         * @param {string} teamId Team ID
+         * @param {number} [pageSize] Page size (default 10)
+         * @param {string} [lastKey] Last key for pagination
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesUserUserIdTeamTeamIdGet: async (userId: string, teamId: string, pageSize?: number, lastKey?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('quizzesUserUserIdTeamTeamIdGet', 'userId', userId)
+            // verify required parameter 'teamId' is not null or undefined
+            assertParamExists('quizzesUserUserIdTeamTeamIdGet', 'teamId', teamId)
+            const localVarPath = `/quizzes/user/{userId}/team/{teamId}`
+                .replace(`{${"userId"}}`, encodeURIComponent(String(userId)))
+                .replace(`{${"teamId"}}`, encodeURIComponent(String(teamId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (pageSize !== undefined) {
+                localVarQueryParameter['pageSize'] = pageSize;
+            }
+
+            if (lastKey !== undefined) {
+                localVarQueryParameter['lastKey'] = lastKey;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * Get teams - all teams, by name, or by prefix with limit
          * @summary Get teams with optional filtering
@@ -335,7 +1104,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * Delete a user from a team by providing team ID
+         * Deletes a user from a team by providing team ID
          * @summary Delete a user from a team
          * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
@@ -374,7 +1143,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * Add a user to a team by providing user ID and team ID
+         * Adds a user to a team by providing user ID and team ID
          * @summary Add a user to a team
          * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
@@ -483,6 +1252,43 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
+         * Get list of friends for a user (accepted requests)
+         * @summary Get friends for a user
+         * @param {string} id User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdFriendsGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('usersIdFriendsGet', 'id', id)
+            const localVarPath = `/users/{id}/friends`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * 
          * @summary Get a user by ID
          * @param {string} id The user\&#39;s ID
@@ -520,19 +1326,60 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
-         * @summary Update a user
-         * @param {string} id The user\&#39;s ID
-         * @param {EntityUser} user The updated user
+         * Get list of mutual friends between userA and userB
+         * @summary Get mutual friends between two users
+         * @param {string} id User A ID
+         * @param {string} otherId User B ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersIdPut: async (id: string, user: EntityUser, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        usersIdMutualOtherIdGet: async (id: string, otherId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'id' is not null or undefined
-            assertParamExists('usersIdPut', 'id', id)
-            // verify required parameter 'user' is not null or undefined
-            assertParamExists('usersIdPut', 'user', user)
-            const localVarPath = `/users/{id}`
+            assertParamExists('usersIdMutualOtherIdGet', 'id', id)
+            // verify required parameter 'otherId' is not null or undefined
+            assertParamExists('usersIdMutualOtherIdGet', 'otherId', otherId)
+            const localVarPath = `/users/{id}/mutual/{otherId}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)))
+                .replace(`{${"otherId"}}`, encodeURIComponent(String(otherId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update user password
+         * @param {string} id The user\&#39;s ID
+         * @param {DtoUserPasswordRequestDTO} request The password update request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdPasswordPut: async (id: string, request: DtoUserPasswordRequestDTO, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('usersIdPasswordPut', 'id', id)
+            // verify required parameter 'request' is not null or undefined
+            assertParamExists('usersIdPasswordPut', 'request', request)
+            const localVarPath = `/users/{id}/password`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -555,7 +1402,87 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(user, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update user profile (selective fields)
+         * @param {string} id The user\&#39;s ID
+         * @param {DtoUserUpdateRequestDTO} request The user profile update (all fields optional)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdPatch: async (id: string, request: DtoUserUpdateRequestDTO, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('usersIdPatch', 'id', id)
+            // verify required parameter 'request' is not null or undefined
+            assertParamExists('usersIdPatch', 'request', request)
+            const localVarPath = `/users/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get a user\'s statistics
+         * @param {string} id The user\&#39;s ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdStatisticsGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('usersIdStatisticsGet', 'id', id)
+            const localVarPath = `/users/{id}/statistics`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -678,20 +1605,20 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
-         * @summary Join voice chat room
-         * @param {string} teamId Team ID
-         * @param {string} userId User ID
+         * Establishes a WebSocket connection for voice communication in a room
+         * @summary Join a voice room via WebSocket
+         * @param {string} roomId Room ID to join
+         * @param {string} userId User ID joining the room
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        voiceTeamIdGet: async (teamId: string, userId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'teamId' is not null or undefined
-            assertParamExists('voiceTeamIdGet', 'teamId', teamId)
+        voiceJoinRoomIdGet: async (roomId: string, userId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'roomId' is not null or undefined
+            assertParamExists('voiceJoinRoomIdGet', 'roomId', roomId)
             // verify required parameter 'userId' is not null or undefined
-            assertParamExists('voiceTeamIdGet', 'userId', userId)
-            const localVarPath = `/voice/{teamId}`
-                .replace(`{${"teamId"}}`, encodeURIComponent(String(teamId)));
+            assertParamExists('voiceJoinRoomIdGet', 'userId', userId)
+            const localVarPath = `/voice/join/{roomId}`
+                .replace(`{${"roomId"}}`, encodeURIComponent(String(roomId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -722,20 +1649,16 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 
-         * @summary Leave voice chat room
-         * @param {string} teamId Team ID
-         * @param {string} userId User ID
+         * Returns all group and private rooms that the user is authorized to join and are not full
+         * @summary Get joinable voice rooms
+         * @param {string} userId User ID of the client
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        voiceTeamIdLeaveDelete: async (teamId: string, userId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'teamId' is not null or undefined
-            assertParamExists('voiceTeamIdLeaveDelete', 'teamId', teamId)
+        voiceJoinableGet: async (userId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'userId' is not null or undefined
-            assertParamExists('voiceTeamIdLeaveDelete', 'userId', userId)
-            const localVarPath = `/voice/{teamId}/leave`
-                .replace(`{${"teamId"}}`, encodeURIComponent(String(teamId)));
+            assertParamExists('voiceJoinableGet', 'userId', userId)
+            const localVarPath = `/voice/joinable`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -743,7 +1666,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -752,6 +1675,144 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
 
             if (userId !== undefined) {
                 localVarQueryParameter['userId'] = userId;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Creates a private voice room for two users with restricted access
+         * @summary Start a private voice call
+         * @param {string} callerId ID of the user initiating the call
+         * @param {string} targetId ID of the user being called
+         * @param {string} [teamId] Team ID for context
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        voicePrivateCallPost: async (callerId: string, targetId: string, teamId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'callerId' is not null or undefined
+            assertParamExists('voicePrivateCallPost', 'callerId', callerId)
+            // verify required parameter 'targetId' is not null or undefined
+            assertParamExists('voicePrivateCallPost', 'targetId', targetId)
+            const localVarPath = `/voice/private/call`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (callerId !== undefined) {
+                localVarQueryParameter['callerId'] = callerId;
+            }
+
+            if (targetId !== undefined) {
+                localVarQueryParameter['targetId'] = targetId;
+            }
+
+            if (teamId !== undefined) {
+                localVarQueryParameter['teamId'] = teamId;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Returns all group voice rooms belonging to a specific team
+         * @summary Get active voice rooms for a team
+         * @param {string} teamId Team ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        voiceRoomsTeamIdGet: async (teamId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'teamId' is not null or undefined
+            assertParamExists('voiceRoomsTeamIdGet', 'teamId', teamId)
+            const localVarPath = `/voice/rooms/{teamId}`
+                .replace(`{${"teamId"}}`, encodeURIComponent(String(teamId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Creates a new voice room for team members
+         * @summary Create a group voice room
+         * @param {string} teamId Team ID
+         * @param {string} userId User ID of the creator
+         * @param {string} [name] Room name (optional)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        voiceRoomsTeamIdPost: async (teamId: string, userId: string, name?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'teamId' is not null or undefined
+            assertParamExists('voiceRoomsTeamIdPost', 'teamId', teamId)
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('voiceRoomsTeamIdPost', 'userId', userId)
+            const localVarPath = `/voice/rooms/{teamId}`
+                .replace(`{${"teamId"}}`, encodeURIComponent(String(teamId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+            if (userId !== undefined) {
+                localVarQueryParameter['userId'] = userId;
+            }
+
+            if (name !== undefined) {
+                localVarQueryParameter['name'] = name;
             }
 
 
@@ -774,6 +1835,214 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
 export const DefaultApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = DefaultApiAxiosParamCreator(configuration)
     return {
+        /**
+         * Middleware to verify JWT token from Authorization header or query parameter
+         * @summary JWT Authentication Middleware
+         * @param {string} [authorization] Bearer token
+         * @param {string} [token] Token for WebSocket connections
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authMiddlewarePost(authorization?: string, token?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authMiddlewarePost(authorization, token, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.authMiddlewarePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Middleware to ensure the authenticated user matches the resource owner
+         * @summary Owner Authorization Middleware
+         * @param {string} id Resource ID that must match authenticated user ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async authOwnerIdPost(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.authOwnerIdPost(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.authOwnerIdPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Send a friend request from one user to another
+         * @summary Send a friend request
+         * @param {string} fromUserId Sender User ID
+         * @param {string} toUserId Recipient User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async friendRequestsFromUserIdToUserIdPost(fromUserId: string, toUserId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.friendRequestsFromUserIdToUserIdPost(fromUserId, toUserId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.friendRequestsFromUserIdToUserIdPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Accept or deny a friend request
+         * @summary Respond to a friend request
+         * @param {string} fromUserId Sender User ID
+         * @param {string} toUserId Recipient User ID
+         * @param {DtoRespondFriendRequestRequest} body Accept or deny
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async friendRequestsFromUserIdToUserIdPut(fromUserId: string, toUserId: string, body: DtoRespondFriendRequestRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.friendRequestsFromUserIdToUserIdPut(fromUserId, toUserId, body, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.friendRequestsFromUserIdToUserIdPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Get pending friend requests for a user
+         * @summary Get pending friend requests
+         * @param {string} userId User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async friendRequestsUserIdGet(userId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoFriendRequestListResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.friendRequestsUserIdGet(userId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.friendRequestsUserIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Connect the user to the message WebSocket
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async messagesConnectGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.messagesConnectGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.messagesConnectGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Get messages between 2 users or within a team
+         * @summary Get all messages
+         * @param {string} type Messages type (direct/team)
+         * @param {string} [user1Id] User1 ID (direct message)
+         * @param {string} [user2Id] User2 ID (direct message)
+         * @param {string} [teamId] Team ID (team message)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async messagesGet(type: string, user1Id?: string, user2Id?: string, teamId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<DtoMessageDTO>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.messagesGet(type, user1Id, user2Id, teamId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.messagesGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a message by ID
+         * @param {string} id The message ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async messagesIdGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoMessageDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.messagesIdGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.messagesIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Create and send a message either to another user or to a team
+         * @summary Create and send a message
+         * @param {string} type Message type (direct/team)
+         * @param {ControllerMessageRequestUnion} request The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async messagesPost(type: string, request: ControllerMessageRequestUnion, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoMessageDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.messagesPost(type, request, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.messagesPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a quiz with answers
+         * @param {string} id The id for quiz
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async quizzesIdGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EntityQuiz>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.quizzesIdGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.quizzesIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a quiz without answers
+         * @param {string} id The id for quiz
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async quizzesIdTestGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoReadQuizResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.quizzesIdTestGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.quizzesIdTestGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Solve a quiz
+         * @param {string} id The id for quiz
+         * @param {DtoSolveQuizRequest} request The solve quiz request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async quizzesIdTestPost(id: string, request: DtoSolveQuizRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoSolveQuizResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.quizzesIdTestPost(id, request, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.quizzesIdTestPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Create a new quiz
+         * @param {EntityQuiz} request The create quiz request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async quizzesPost(request: EntityQuiz, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoCreateQuizResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.quizzesPost(request, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.quizzesPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get quizzes by team with pagination
+         * @param {string} teamId Team ID
+         * @param {number} [pageSize] Page size (default 10)
+         * @param {string} [lastKey] Last key for pagination
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async quizzesTeamTeamIdGet(teamId: string, pageSize?: number, lastKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.quizzesTeamTeamIdGet(teamId, pageSize, lastKey, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.quizzesTeamTeamIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get quizzes by user with pagination
+         * @param {string} userId User ID
+         * @param {string} teamId Team ID
+         * @param {number} [pageSize] Page size (default 10)
+         * @param {string} [lastKey] Last key for pagination
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async quizzesUserUserIdTeamTeamIdGet(userId: string, teamId: string, pageSize?: number, lastKey?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.quizzesUserUserIdTeamTeamIdGet(userId, teamId, pageSize, lastKey, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.quizzesUserUserIdTeamTeamIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
         /**
          * Get teams - all teams, by name, or by prefix with limit
          * @summary Get teams with optional filtering
@@ -843,26 +2112,26 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Delete a user from a team by providing team ID
+         * Deletes a user from a team by providing team ID
          * @summary Delete a user from a team
          * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async teamsUsersDelete(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+        async teamsUsersDelete(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoAddUserToTeamResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.teamsUsersDelete(request, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.teamsUsersDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Add a user to a team by providing user ID and team ID
+         * Adds a user to a team by providing user ID and team ID
          * @summary Add a user to a team
          * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async teamsUsersPut(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: any; }>> {
+        async teamsUsersPut(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoAddUserToTeamResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.teamsUsersPut(request, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.teamsUsersPut']?.[localVarOperationServerIndex]?.url;
@@ -894,6 +2163,19 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Get list of friends for a user (accepted requests)
+         * @summary Get friends for a user
+         * @param {string} id User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async usersIdFriendsGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<EntityUser>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdFriendsGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdFriendsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * 
          * @summary Get a user by ID
          * @param {string} id The user\&#39;s ID
@@ -907,17 +2189,58 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
-         * @summary Update a user
-         * @param {string} id The user\&#39;s ID
-         * @param {EntityUser} user The updated user
+         * Get list of mutual friends between userA and userB
+         * @summary Get mutual friends between two users
+         * @param {string} id User A ID
+         * @param {string} otherId User B ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async usersIdPut(id: string, user: EntityUser, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EntityUser>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdPut(id, user, options);
+        async usersIdMutualOtherIdGet(id: string, otherId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<EntityUser>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdMutualOtherIdGet(id, otherId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdMutualOtherIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update user password
+         * @param {string} id The user\&#39;s ID
+         * @param {DtoUserPasswordRequestDTO} request The password update request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async usersIdPasswordPut(id: string, request: DtoUserPasswordRequestDTO, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: string; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdPasswordPut(id, request, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdPasswordPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update user profile (selective fields)
+         * @param {string} id The user\&#39;s ID
+         * @param {DtoUserUpdateRequestDTO} request The user profile update (all fields optional)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async usersIdPatch(id: string, request: DtoUserUpdateRequestDTO, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoUserUpdateResponseDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdPatch(id, request, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdPatch']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get a user\'s statistics
+         * @param {string} id The user\&#39;s ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async usersIdStatisticsGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoStatisticsResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdStatisticsGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdStatisticsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -928,7 +2251,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async usersIdStatisticsPut(id: string, request: DtoUpdateStatisticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoUpdateStatisticsResponse>> {
+        async usersIdStatisticsPut(id: string, request: DtoUpdateStatisticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DtoStatisticsResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.usersIdStatisticsPut(id, request, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.usersIdStatisticsPut']?.[localVarOperationServerIndex]?.url;
@@ -961,31 +2284,73 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
-         * @summary Join voice chat room
-         * @param {string} teamId Team ID
-         * @param {string} userId User ID
+         * Establishes a WebSocket connection for voice communication in a room
+         * @summary Join a voice room via WebSocket
+         * @param {string} roomId Room ID to join
+         * @param {string} userId User ID joining the room
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async voiceTeamIdGet(teamId: string, userId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.voiceTeamIdGet(teamId, userId, options);
+        async voiceJoinRoomIdGet(roomId: string, userId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.voiceJoinRoomIdGet(roomId, userId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.voiceTeamIdGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.voiceJoinRoomIdGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
-         * @summary Leave voice chat room
-         * @param {string} teamId Team ID
-         * @param {string} userId User ID
+         * Returns all group and private rooms that the user is authorized to join and are not full
+         * @summary Get joinable voice rooms
+         * @param {string} userId User ID of the client
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async voiceTeamIdLeaveDelete(teamId: string, userId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: string; }>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.voiceTeamIdLeaveDelete(teamId, userId, options);
+        async voiceJoinableGet(userId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ControllerRoomResponse>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.voiceJoinableGet(userId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.voiceTeamIdLeaveDelete']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.voiceJoinableGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Creates a private voice room for two users with restricted access
+         * @summary Start a private voice call
+         * @param {string} callerId ID of the user initiating the call
+         * @param {string} targetId ID of the user being called
+         * @param {string} [teamId] Team ID for context
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async voicePrivateCallPost(callerId: string, targetId: string, teamId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EntityVoiceRoom>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.voicePrivateCallPost(callerId, targetId, teamId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.voicePrivateCallPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Returns all group voice rooms belonging to a specific team
+         * @summary Get active voice rooms for a team
+         * @param {string} teamId Team ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async voiceRoomsTeamIdGet(teamId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ControllerRoomResponse>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.voiceRoomsTeamIdGet(teamId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.voiceRoomsTeamIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Creates a new voice room for team members
+         * @summary Create a group voice room
+         * @param {string} teamId Team ID
+         * @param {string} userId User ID of the creator
+         * @param {string} [name] Room name (optional)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async voiceRoomsTeamIdPost(teamId: string, userId: string, name?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EntityVoiceRoom>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.voiceRoomsTeamIdPost(teamId, userId, name, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.voiceRoomsTeamIdPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -997,6 +2362,169 @@ export const DefaultApiFp = function(configuration?: Configuration) {
 export const DefaultApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
     const localVarFp = DefaultApiFp(configuration)
     return {
+        /**
+         * Middleware to verify JWT token from Authorization header or query parameter
+         * @summary JWT Authentication Middleware
+         * @param {string} [authorization] Bearer token
+         * @param {string} [token] Token for WebSocket connections
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authMiddlewarePost(authorization?: string, token?: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.authMiddlewarePost(authorization, token, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Middleware to ensure the authenticated user matches the resource owner
+         * @summary Owner Authorization Middleware
+         * @param {string} id Resource ID that must match authenticated user ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        authOwnerIdPost(id: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.authOwnerIdPost(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Send a friend request from one user to another
+         * @summary Send a friend request
+         * @param {string} fromUserId Sender User ID
+         * @param {string} toUserId Recipient User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        friendRequestsFromUserIdToUserIdPost(fromUserId: string, toUserId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.friendRequestsFromUserIdToUserIdPost(fromUserId, toUserId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Accept or deny a friend request
+         * @summary Respond to a friend request
+         * @param {string} fromUserId Sender User ID
+         * @param {string} toUserId Recipient User ID
+         * @param {DtoRespondFriendRequestRequest} body Accept or deny
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        friendRequestsFromUserIdToUserIdPut(fromUserId: string, toUserId: string, body: DtoRespondFriendRequestRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.friendRequestsFromUserIdToUserIdPut(fromUserId, toUserId, body, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Get pending friend requests for a user
+         * @summary Get pending friend requests
+         * @param {string} userId User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        friendRequestsUserIdGet(userId: string, options?: RawAxiosRequestConfig): AxiosPromise<DtoFriendRequestListResponse> {
+            return localVarFp.friendRequestsUserIdGet(userId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Connect the user to the message WebSocket
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesConnectGet(options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.messagesConnectGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Get messages between 2 users or within a team
+         * @summary Get all messages
+         * @param {string} type Messages type (direct/team)
+         * @param {string} [user1Id] User1 ID (direct message)
+         * @param {string} [user2Id] User2 ID (direct message)
+         * @param {string} [teamId] Team ID (team message)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesGet(type: string, user1Id?: string, user2Id?: string, teamId?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<DtoMessageDTO>> {
+            return localVarFp.messagesGet(type, user1Id, user2Id, teamId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a message by ID
+         * @param {string} id The message ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesIdGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<DtoMessageDTO> {
+            return localVarFp.messagesIdGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Create and send a message either to another user or to a team
+         * @summary Create and send a message
+         * @param {string} type Message type (direct/team)
+         * @param {ControllerMessageRequestUnion} request The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messagesPost(type: string, request: ControllerMessageRequestUnion, options?: RawAxiosRequestConfig): AxiosPromise<DtoMessageDTO> {
+            return localVarFp.messagesPost(type, request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a quiz with answers
+         * @param {string} id The id for quiz
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesIdGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<EntityQuiz> {
+            return localVarFp.quizzesIdGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a quiz without answers
+         * @param {string} id The id for quiz
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesIdTestGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<DtoReadQuizResponse> {
+            return localVarFp.quizzesIdTestGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Solve a quiz
+         * @param {string} id The id for quiz
+         * @param {DtoSolveQuizRequest} request The solve quiz request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesIdTestPost(id: string, request: DtoSolveQuizRequest, options?: RawAxiosRequestConfig): AxiosPromise<DtoSolveQuizResponse> {
+            return localVarFp.quizzesIdTestPost(id, request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Create a new quiz
+         * @param {EntityQuiz} request The create quiz request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesPost(request: EntityQuiz, options?: RawAxiosRequestConfig): AxiosPromise<DtoCreateQuizResponse> {
+            return localVarFp.quizzesPost(request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get quizzes by team with pagination
+         * @param {string} teamId Team ID
+         * @param {number} [pageSize] Page size (default 10)
+         * @param {string} [lastKey] Last key for pagination
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesTeamTeamIdGet(teamId: string, pageSize?: number, lastKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+            return localVarFp.quizzesTeamTeamIdGet(teamId, pageSize, lastKey, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get quizzes by user with pagination
+         * @param {string} userId User ID
+         * @param {string} teamId Team ID
+         * @param {number} [pageSize] Page size (default 10)
+         * @param {string} [lastKey] Last key for pagination
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        quizzesUserUserIdTeamTeamIdGet(userId: string, teamId: string, pageSize?: number, lastKey?: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+            return localVarFp.quizzesUserUserIdTeamTeamIdGet(userId, teamId, pageSize, lastKey, options).then((request) => request(axios, basePath));
+        },
         /**
          * Get teams - all teams, by name, or by prefix with limit
          * @summary Get teams with optional filtering
@@ -1051,23 +2579,23 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.teamsPost(request, options).then((request) => request(axios, basePath));
         },
         /**
-         * Delete a user from a team by providing team ID
+         * Deletes a user from a team by providing team ID
          * @summary Delete a user from a team
          * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        teamsUsersDelete(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+        teamsUsersDelete(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<DtoAddUserToTeamResponse> {
             return localVarFp.teamsUsersDelete(request, options).then((request) => request(axios, basePath));
         },
         /**
-         * Add a user to a team by providing user ID and team ID
+         * Adds a user to a team by providing user ID and team ID
          * @summary Add a user to a team
          * @param {DtoUserToTeamRequest} request User ID and Team ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        teamsUsersPut(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: any; }> {
+        teamsUsersPut(request: DtoUserToTeamRequest, options?: RawAxiosRequestConfig): AxiosPromise<DtoAddUserToTeamResponse> {
             return localVarFp.teamsUsersPut(request, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1090,6 +2618,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.usersIdDelete(id, options).then((request) => request(axios, basePath));
         },
         /**
+         * Get list of friends for a user (accepted requests)
+         * @summary Get friends for a user
+         * @param {string} id User ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdFriendsGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<EntityUser>> {
+            return localVarFp.usersIdFriendsGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
          * 
          * @summary Get a user by ID
          * @param {string} id The user\&#39;s ID
@@ -1100,15 +2638,47 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.usersIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
-         * @summary Update a user
-         * @param {string} id The user\&#39;s ID
-         * @param {EntityUser} user The updated user
+         * Get list of mutual friends between userA and userB
+         * @summary Get mutual friends between two users
+         * @param {string} id User A ID
+         * @param {string} otherId User B ID
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersIdPut(id: string, user: EntityUser, options?: RawAxiosRequestConfig): AxiosPromise<EntityUser> {
-            return localVarFp.usersIdPut(id, user, options).then((request) => request(axios, basePath));
+        usersIdMutualOtherIdGet(id: string, otherId: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<EntityUser>> {
+            return localVarFp.usersIdMutualOtherIdGet(id, otherId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update user password
+         * @param {string} id The user\&#39;s ID
+         * @param {DtoUserPasswordRequestDTO} request The password update request
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdPasswordPut(id: string, request: DtoUserPasswordRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }> {
+            return localVarFp.usersIdPasswordPut(id, request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update user profile (selective fields)
+         * @param {string} id The user\&#39;s ID
+         * @param {DtoUserUpdateRequestDTO} request The user profile update (all fields optional)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdPatch(id: string, request: DtoUserUpdateRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<DtoUserUpdateResponseDTO> {
+            return localVarFp.usersIdPatch(id, request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get a user\'s statistics
+         * @param {string} id The user\&#39;s ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        usersIdStatisticsGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<DtoStatisticsResponse> {
+            return localVarFp.usersIdStatisticsGet(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1118,7 +2688,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersIdStatisticsPut(id: string, request: DtoUpdateStatisticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<DtoUpdateStatisticsResponse> {
+        usersIdStatisticsPut(id: string, request: DtoUpdateStatisticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<DtoStatisticsResponse> {
             return localVarFp.usersIdStatisticsPut(id, request, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1142,26 +2712,59 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return localVarFp.usersSignupPost(request, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
-         * @summary Join voice chat room
-         * @param {string} teamId Team ID
-         * @param {string} userId User ID
+         * Establishes a WebSocket connection for voice communication in a room
+         * @summary Join a voice room via WebSocket
+         * @param {string} roomId Room ID to join
+         * @param {string} userId User ID joining the room
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        voiceTeamIdGet(teamId: string, userId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.voiceTeamIdGet(teamId, userId, options).then((request) => request(axios, basePath));
+        voiceJoinRoomIdGet(roomId: string, userId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.voiceJoinRoomIdGet(roomId, userId, options).then((request) => request(axios, basePath));
         },
         /**
-         * 
-         * @summary Leave voice chat room
-         * @param {string} teamId Team ID
-         * @param {string} userId User ID
+         * Returns all group and private rooms that the user is authorized to join and are not full
+         * @summary Get joinable voice rooms
+         * @param {string} userId User ID of the client
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        voiceTeamIdLeaveDelete(teamId: string, userId: string, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }> {
-            return localVarFp.voiceTeamIdLeaveDelete(teamId, userId, options).then((request) => request(axios, basePath));
+        voiceJoinableGet(userId: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<ControllerRoomResponse>> {
+            return localVarFp.voiceJoinableGet(userId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Creates a private voice room for two users with restricted access
+         * @summary Start a private voice call
+         * @param {string} callerId ID of the user initiating the call
+         * @param {string} targetId ID of the user being called
+         * @param {string} [teamId] Team ID for context
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        voicePrivateCallPost(callerId: string, targetId: string, teamId?: string, options?: RawAxiosRequestConfig): AxiosPromise<EntityVoiceRoom> {
+            return localVarFp.voicePrivateCallPost(callerId, targetId, teamId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Returns all group voice rooms belonging to a specific team
+         * @summary Get active voice rooms for a team
+         * @param {string} teamId Team ID
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        voiceRoomsTeamIdGet(teamId: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<ControllerRoomResponse>> {
+            return localVarFp.voiceRoomsTeamIdGet(teamId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Creates a new voice room for team members
+         * @summary Create a group voice room
+         * @param {string} teamId Team ID
+         * @param {string} userId User ID of the creator
+         * @param {string} [name] Room name (optional)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        voiceRoomsTeamIdPost(teamId: string, userId: string, name?: string, options?: RawAxiosRequestConfig): AxiosPromise<EntityVoiceRoom> {
+            return localVarFp.voiceRoomsTeamIdPost(teamId, userId, name, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1170,6 +2773,184 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
  * DefaultApi - object-oriented interface
  */
 export class DefaultApi extends BaseAPI {
+    /**
+     * Middleware to verify JWT token from Authorization header or query parameter
+     * @summary JWT Authentication Middleware
+     * @param {string} [authorization] Bearer token
+     * @param {string} [token] Token for WebSocket connections
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public authMiddlewarePost(authorization?: string, token?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authMiddlewarePost(authorization, token, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Middleware to ensure the authenticated user matches the resource owner
+     * @summary Owner Authorization Middleware
+     * @param {string} id Resource ID that must match authenticated user ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public authOwnerIdPost(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).authOwnerIdPost(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Send a friend request from one user to another
+     * @summary Send a friend request
+     * @param {string} fromUserId Sender User ID
+     * @param {string} toUserId Recipient User ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public friendRequestsFromUserIdToUserIdPost(fromUserId: string, toUserId: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).friendRequestsFromUserIdToUserIdPost(fromUserId, toUserId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Accept or deny a friend request
+     * @summary Respond to a friend request
+     * @param {string} fromUserId Sender User ID
+     * @param {string} toUserId Recipient User ID
+     * @param {DtoRespondFriendRequestRequest} body Accept or deny
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public friendRequestsFromUserIdToUserIdPut(fromUserId: string, toUserId: string, body: DtoRespondFriendRequestRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).friendRequestsFromUserIdToUserIdPut(fromUserId, toUserId, body, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Get pending friend requests for a user
+     * @summary Get pending friend requests
+     * @param {string} userId User ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public friendRequestsUserIdGet(userId: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).friendRequestsUserIdGet(userId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Connect the user to the message WebSocket
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public messagesConnectGet(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).messagesConnectGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Get messages between 2 users or within a team
+     * @summary Get all messages
+     * @param {string} type Messages type (direct/team)
+     * @param {string} [user1Id] User1 ID (direct message)
+     * @param {string} [user2Id] User2 ID (direct message)
+     * @param {string} [teamId] Team ID (team message)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public messagesGet(type: string, user1Id?: string, user2Id?: string, teamId?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).messagesGet(type, user1Id, user2Id, teamId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a message by ID
+     * @param {string} id The message ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public messagesIdGet(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).messagesIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Create and send a message either to another user or to a team
+     * @summary Create and send a message
+     * @param {string} type Message type (direct/team)
+     * @param {ControllerMessageRequestUnion} request The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public messagesPost(type: string, request: ControllerMessageRequestUnion, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).messagesPost(type, request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a quiz with answers
+     * @param {string} id The id for quiz
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public quizzesIdGet(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).quizzesIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a quiz without answers
+     * @param {string} id The id for quiz
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public quizzesIdTestGet(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).quizzesIdTestGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Solve a quiz
+     * @param {string} id The id for quiz
+     * @param {DtoSolveQuizRequest} request The solve quiz request
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public quizzesIdTestPost(id: string, request: DtoSolveQuizRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).quizzesIdTestPost(id, request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Create a new quiz
+     * @param {EntityQuiz} request The create quiz request
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public quizzesPost(request: EntityQuiz, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).quizzesPost(request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get quizzes by team with pagination
+     * @param {string} teamId Team ID
+     * @param {number} [pageSize] Page size (default 10)
+     * @param {string} [lastKey] Last key for pagination
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public quizzesTeamTeamIdGet(teamId: string, pageSize?: number, lastKey?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).quizzesTeamTeamIdGet(teamId, pageSize, lastKey, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get quizzes by user with pagination
+     * @param {string} userId User ID
+     * @param {string} teamId Team ID
+     * @param {number} [pageSize] Page size (default 10)
+     * @param {string} [lastKey] Last key for pagination
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public quizzesUserUserIdTeamTeamIdGet(userId: string, teamId: string, pageSize?: number, lastKey?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).quizzesUserUserIdTeamTeamIdGet(userId, teamId, pageSize, lastKey, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * Get teams - all teams, by name, or by prefix with limit
      * @summary Get teams with optional filtering
@@ -1229,7 +3010,7 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * Delete a user from a team by providing team ID
+     * Deletes a user from a team by providing team ID
      * @summary Delete a user from a team
      * @param {DtoUserToTeamRequest} request User ID and Team ID
      * @param {*} [options] Override http request option.
@@ -1240,7 +3021,7 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * Add a user to a team by providing user ID and team ID
+     * Adds a user to a team by providing user ID and team ID
      * @summary Add a user to a team
      * @param {DtoUserToTeamRequest} request User ID and Team ID
      * @param {*} [options] Override http request option.
@@ -1272,6 +3053,17 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
+     * Get list of friends for a user (accepted requests)
+     * @summary Get friends for a user
+     * @param {string} id User ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public usersIdFriendsGet(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).usersIdFriendsGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
      * 
      * @summary Get a user by ID
      * @param {string} id The user\&#39;s ID
@@ -1283,15 +3075,50 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 
-     * @summary Update a user
-     * @param {string} id The user\&#39;s ID
-     * @param {EntityUser} user The updated user
+     * Get list of mutual friends between userA and userB
+     * @summary Get mutual friends between two users
+     * @param {string} id User A ID
+     * @param {string} otherId User B ID
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public usersIdPut(id: string, user: EntityUser, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).usersIdPut(id, user, options).then((request) => request(this.axios, this.basePath));
+    public usersIdMutualOtherIdGet(id: string, otherId: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).usersIdMutualOtherIdGet(id, otherId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update user password
+     * @param {string} id The user\&#39;s ID
+     * @param {DtoUserPasswordRequestDTO} request The password update request
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public usersIdPasswordPut(id: string, request: DtoUserPasswordRequestDTO, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).usersIdPasswordPut(id, request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update user profile (selective fields)
+     * @param {string} id The user\&#39;s ID
+     * @param {DtoUserUpdateRequestDTO} request The user profile update (all fields optional)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public usersIdPatch(id: string, request: DtoUserUpdateRequestDTO, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).usersIdPatch(id, request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get a user\'s statistics
+     * @param {string} id The user\&#39;s ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public usersIdStatisticsGet(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).usersIdStatisticsGet(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1329,27 +3156,63 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 
-     * @summary Join voice chat room
-     * @param {string} teamId Team ID
-     * @param {string} userId User ID
+     * Establishes a WebSocket connection for voice communication in a room
+     * @summary Join a voice room via WebSocket
+     * @param {string} roomId Room ID to join
+     * @param {string} userId User ID joining the room
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public voiceTeamIdGet(teamId: string, userId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).voiceTeamIdGet(teamId, userId, options).then((request) => request(this.axios, this.basePath));
+    public voiceJoinRoomIdGet(roomId: string, userId: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).voiceJoinRoomIdGet(roomId, userId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * 
-     * @summary Leave voice chat room
-     * @param {string} teamId Team ID
-     * @param {string} userId User ID
+     * Returns all group and private rooms that the user is authorized to join and are not full
+     * @summary Get joinable voice rooms
+     * @param {string} userId User ID of the client
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public voiceTeamIdLeaveDelete(teamId: string, userId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).voiceTeamIdLeaveDelete(teamId, userId, options).then((request) => request(this.axios, this.basePath));
+    public voiceJoinableGet(userId: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).voiceJoinableGet(userId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Creates a private voice room for two users with restricted access
+     * @summary Start a private voice call
+     * @param {string} callerId ID of the user initiating the call
+     * @param {string} targetId ID of the user being called
+     * @param {string} [teamId] Team ID for context
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public voicePrivateCallPost(callerId: string, targetId: string, teamId?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).voicePrivateCallPost(callerId, targetId, teamId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Returns all group voice rooms belonging to a specific team
+     * @summary Get active voice rooms for a team
+     * @param {string} teamId Team ID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public voiceRoomsTeamIdGet(teamId: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).voiceRoomsTeamIdGet(teamId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Creates a new voice room for team members
+     * @summary Create a group voice room
+     * @param {string} teamId Team ID
+     * @param {string} userId User ID of the creator
+     * @param {string} [name] Room name (optional)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public voiceRoomsTeamIdPost(teamId: string, userId: string, name?: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).voiceRoomsTeamIdPost(teamId, userId, name, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

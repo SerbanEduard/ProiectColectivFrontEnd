@@ -4,6 +4,21 @@ All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**authMiddlewarePost**](#authmiddlewarepost) | **POST** /auth/middleware | JWT Authentication Middleware|
+|[**authOwnerIdPost**](#authowneridpost) | **POST** /auth/owner/{id} | Owner Authorization Middleware|
+|[**friendRequestsFromUserIdToUserIdPost**](#friendrequestsfromuseridtouseridpost) | **POST** /friend-requests/{fromUserId}/{toUserId} | Send a friend request|
+|[**friendRequestsFromUserIdToUserIdPut**](#friendrequestsfromuseridtouseridput) | **PUT** /friend-requests/{fromUserId}/{toUserId} | Respond to a friend request|
+|[**friendRequestsUserIdGet**](#friendrequestsuseridget) | **GET** /friend-requests/{userId} | Get pending friend requests|
+|[**messagesConnectGet**](#messagesconnectget) | **GET** /messages/connect | Connect the user to the message WebSocket|
+|[**messagesGet**](#messagesget) | **GET** /messages | Get all messages|
+|[**messagesIdGet**](#messagesidget) | **GET** /messages/{id} | Get a message by ID|
+|[**messagesPost**](#messagespost) | **POST** /messages | Create and send a message|
+|[**quizzesIdGet**](#quizzesidget) | **GET** /quizzes/{id} | Get a quiz with answers|
+|[**quizzesIdTestGet**](#quizzesidtestget) | **GET** /quizzes/{id}/test | Get a quiz without answers|
+|[**quizzesIdTestPost**](#quizzesidtestpost) | **POST** /quizzes/{id}/test | Solve a quiz|
+|[**quizzesPost**](#quizzespost) | **POST** /quizzes | Create a new quiz|
+|[**quizzesTeamTeamIdGet**](#quizzesteamteamidget) | **GET** /quizzes/team/{teamId} | Get quizzes by team with pagination|
+|[**quizzesUserUserIdTeamTeamIdGet**](#quizzesuseruseridteamteamidget) | **GET** /quizzes/user/{userId}/team/{teamId} | Get quizzes by user with pagination|
 |[**teamsGet**](#teamsget) | **GET** /teams | Get teams with optional filtering|
 |[**teamsIdDelete**](#teamsiddelete) | **DELETE** /teams/{id} | Delete a team|
 |[**teamsIdGet**](#teamsidget) | **GET** /teams/{id} | Get a team by ID|
@@ -13,13 +28,850 @@ All URIs are relative to *http://localhost*
 |[**teamsUsersPut**](#teamsusersput) | **PUT** /teams/users | Add a user to a team|
 |[**usersGet**](#usersget) | **GET** /users | Get all users|
 |[**usersIdDelete**](#usersiddelete) | **DELETE** /users/{id} | Delete a user|
+|[**usersIdFriendsGet**](#usersidfriendsget) | **GET** /users/{id}/friends | Get friends for a user|
 |[**usersIdGet**](#usersidget) | **GET** /users/{id} | Get a user by ID|
-|[**usersIdPut**](#usersidput) | **PUT** /users/{id} | Update a user|
+|[**usersIdMutualOtherIdGet**](#usersidmutualotheridget) | **GET** /users/{id}/mutual/{otherId} | Get mutual friends between two users|
+|[**usersIdPasswordPut**](#usersidpasswordput) | **PUT** /users/{id}/password | Update user password|
+|[**usersIdPatch**](#usersidpatch) | **PATCH** /users/{id} | Update user profile (selective fields)|
+|[**usersIdStatisticsGet**](#usersidstatisticsget) | **GET** /users/{id}/statistics | Get a user\&#39;s statistics|
 |[**usersIdStatisticsPut**](#usersidstatisticsput) | **PUT** /users/{id}/statistics | Update user statistics|
 |[**usersLoginPost**](#usersloginpost) | **POST** /users/login | Login user by email or username and return JWT|
 |[**usersSignupPost**](#userssignuppost) | **POST** /users/signup | Register a new user|
-|[**voiceTeamIdGet**](#voiceteamidget) | **GET** /voice/{teamId} | Join voice chat room|
-|[**voiceTeamIdLeaveDelete**](#voiceteamidleavedelete) | **DELETE** /voice/{teamId}/leave | Leave voice chat room|
+|[**voiceJoinRoomIdGet**](#voicejoinroomidget) | **GET** /voice/join/{roomId} | Join a voice room via WebSocket|
+|[**voiceJoinableGet**](#voicejoinableget) | **GET** /voice/joinable | Get joinable voice rooms|
+|[**voicePrivateCallPost**](#voiceprivatecallpost) | **POST** /voice/private/call | Start a private voice call|
+|[**voiceRoomsTeamIdGet**](#voiceroomsteamidget) | **GET** /voice/rooms/{teamId} | Get active voice rooms for a team|
+|[**voiceRoomsTeamIdPost**](#voiceroomsteamidpost) | **POST** /voice/rooms/{teamId} | Create a group voice room|
+
+# **authMiddlewarePost**
+> string authMiddlewarePost()
+
+Middleware to verify JWT token from Authorization header or query parameter
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let authorization: string; //Bearer token (optional) (default to undefined)
+let token: string; //Token for WebSocket connections (optional) (default to undefined)
+
+const { status, data } = await apiInstance.authMiddlewarePost(
+    authorization,
+    token
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **authorization** | [**string**] | Bearer token | (optional) defaults to undefined|
+| **token** | [**string**] | Token for WebSocket connections | (optional) defaults to undefined|
+
+
+### Return type
+
+**string**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Token is valid |  -  |
+|**401** | Unauthorized |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **authOwnerIdPost**
+> string authOwnerIdPost()
+
+Middleware to ensure the authenticated user matches the resource owner
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //Resource ID that must match authenticated user ID (default to undefined)
+
+const { status, data } = await apiInstance.authOwnerIdPost(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | Resource ID that must match authenticated user ID | defaults to undefined|
+
+
+### Return type
+
+**string**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | User is authorized |  -  |
+|**403** | Forbidden |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **friendRequestsFromUserIdToUserIdPost**
+> friendRequestsFromUserIdToUserIdPost()
+
+Send a friend request from one user to another
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let fromUserId: string; //Sender User ID (default to undefined)
+let toUserId: string; //Recipient User ID (default to undefined)
+
+const { status, data } = await apiInstance.friendRequestsFromUserIdToUserIdPost(
+    fromUserId,
+    toUserId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **fromUserId** | [**string**] | Sender User ID | defaults to undefined|
+| **toUserId** | [**string**] | Recipient User ID | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **friendRequestsFromUserIdToUserIdPut**
+> friendRequestsFromUserIdToUserIdPut(body)
+
+Accept or deny a friend request
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    DtoRespondFriendRequestRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let fromUserId: string; //Sender User ID (default to undefined)
+let toUserId: string; //Recipient User ID (default to undefined)
+let body: DtoRespondFriendRequestRequest; //Accept or deny
+
+const { status, data } = await apiInstance.friendRequestsFromUserIdToUserIdPut(
+    fromUserId,
+    toUserId,
+    body
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **DtoRespondFriendRequestRequest**| Accept or deny | |
+| **fromUserId** | [**string**] | Sender User ID | defaults to undefined|
+| **toUserId** | [**string**] | Recipient User ID | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **friendRequestsUserIdGet**
+> DtoFriendRequestListResponse friendRequestsUserIdGet()
+
+Get pending friend requests for a user
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let userId: string; //User ID (default to undefined)
+
+const { status, data } = await apiInstance.friendRequestsUserIdGet(
+    userId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **userId** | [**string**] | User ID | defaults to undefined|
+
+
+### Return type
+
+**DtoFriendRequestListResponse**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **messagesConnectGet**
+> messagesConnectGet()
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+const { status, data } = await apiInstance.messagesConnectGet();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**101** | Switching Protocols - WebSocket connection established |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **messagesGet**
+> Array<DtoMessageDTO> messagesGet()
+
+Get messages between 2 users or within a team
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let type: string; //Messages type (direct/team) (default to undefined)
+let user1Id: string; //User1 ID (direct message) (optional) (default to undefined)
+let user2Id: string; //User2 ID (direct message) (optional) (default to undefined)
+let teamId: string; //Team ID (team message) (optional) (default to undefined)
+
+const { status, data } = await apiInstance.messagesGet(
+    type,
+    user1Id,
+    user2Id,
+    teamId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **type** | [**string**] | Messages type (direct/team) | defaults to undefined|
+| **user1Id** | [**string**] | User1 ID (direct message) | (optional) defaults to undefined|
+| **user2Id** | [**string**] | User2 ID (direct message) | (optional) defaults to undefined|
+| **teamId** | [**string**] | Team ID (team message) | (optional) defaults to undefined|
+
+
+### Return type
+
+**Array<DtoMessageDTO>**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **messagesIdGet**
+> DtoMessageDTO messagesIdGet()
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //The message ID (default to undefined)
+
+const { status, data } = await apiInstance.messagesIdGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | The message ID | defaults to undefined|
+
+
+### Return type
+
+**DtoMessageDTO**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **messagesPost**
+> DtoMessageDTO messagesPost(request)
+
+Create and send a message either to another user or to a team
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    ControllerMessageRequestUnion
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let type: string; //Message type (direct/team) (default to undefined)
+let request: ControllerMessageRequestUnion; //The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest)
+
+const { status, data } = await apiInstance.messagesPost(
+    type,
+    request
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **request** | **ControllerMessageRequestUnion**| The message request (this is only for documentation purposes, the actual request should be either DirectMessageRequest or TeamMessageRequest) | |
+| **type** | [**string**] | Message type (direct/team) | defaults to undefined|
+
+
+### Return type
+
+**DtoMessageDTO**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **quizzesIdGet**
+> EntityQuiz quizzesIdGet()
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //The id for quiz (default to undefined)
+
+const { status, data } = await apiInstance.quizzesIdGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | The id for quiz | defaults to undefined|
+
+
+### Return type
+
+**EntityQuiz**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **quizzesIdTestGet**
+> DtoReadQuizResponse quizzesIdTestGet()
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //The id for quiz (default to undefined)
+
+const { status, data } = await apiInstance.quizzesIdTestGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | The id for quiz | defaults to undefined|
+
+
+### Return type
+
+**DtoReadQuizResponse**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **quizzesIdTestPost**
+> DtoSolveQuizResponse quizzesIdTestPost(request)
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    DtoSolveQuizRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //The id for quiz (default to undefined)
+let request: DtoSolveQuizRequest; //The solve quiz request
+
+const { status, data } = await apiInstance.quizzesIdTestPost(
+    id,
+    request
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **request** | **DtoSolveQuizRequest**| The solve quiz request | |
+| **id** | [**string**] | The id for quiz | defaults to undefined|
+
+
+### Return type
+
+**DtoSolveQuizResponse**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **quizzesPost**
+> DtoCreateQuizResponse quizzesPost(request)
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    EntityQuiz
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let request: EntityQuiz; //The create quiz request
+
+const { status, data } = await apiInstance.quizzesPost(
+    request
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **request** | **EntityQuiz**| The create quiz request | |
+
+
+### Return type
+
+**DtoCreateQuizResponse**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+|**403** | Forbidden |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **quizzesTeamTeamIdGet**
+> { [key: string]: any; } quizzesTeamTeamIdGet()
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let teamId: string; //Team ID (default to undefined)
+let pageSize: number; //Page size (default 10) (optional) (default to undefined)
+let lastKey: string; //Last key for pagination (optional) (default to undefined)
+
+const { status, data } = await apiInstance.quizzesTeamTeamIdGet(
+    teamId,
+    pageSize,
+    lastKey
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | [**string**] | Team ID | defaults to undefined|
+| **pageSize** | [**number**] | Page size (default 10) | (optional) defaults to undefined|
+| **lastKey** | [**string**] | Last key for pagination | (optional) defaults to undefined|
+
+
+### Return type
+
+**{ [key: string]: any; }**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **quizzesUserUserIdTeamTeamIdGet**
+> { [key: string]: any; } quizzesUserUserIdTeamTeamIdGet()
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let userId: string; //User ID (default to undefined)
+let teamId: string; //Team ID (default to undefined)
+let pageSize: number; //Page size (default 10) (optional) (default to undefined)
+let lastKey: string; //Last key for pagination (optional) (default to undefined)
+
+const { status, data } = await apiInstance.quizzesUserUserIdTeamTeamIdGet(
+    userId,
+    teamId,
+    pageSize,
+    lastKey
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **userId** | [**string**] | User ID | defaults to undefined|
+| **teamId** | [**string**] | Team ID | defaults to undefined|
+| **pageSize** | [**number**] | Page size (default 10) | (optional) defaults to undefined|
+| **lastKey** | [**string**] | Last key for pagination | (optional) defaults to undefined|
+
+
+### Return type
+
+**{ [key: string]: any; }**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **teamsGet**
 > Array<EntityTeam> teamsGet()
@@ -297,9 +1149,9 @@ const { status, data } = await apiInstance.teamsPost(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **teamsUsersDelete**
-> { [key: string]: any; } teamsUsersDelete(request)
+> DtoAddUserToTeamResponse teamsUsersDelete(request)
 
-Delete a user from a team by providing team ID
+Deletes a user from a team by providing team ID
 
 ### Example
 
@@ -329,7 +1181,7 @@ const { status, data } = await apiInstance.teamsUsersDelete(
 
 ### Return type
 
-**{ [key: string]: any; }**
+**DtoAddUserToTeamResponse**
 
 ### Authorization
 
@@ -337,22 +1189,22 @@ const { status, data } = await apiInstance.teamsUsersDelete(
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | User deleted from team |  -  |
-|**400** | Bad Request: Invalid request body or missing userId or teamId |  -  |
+|**200** | User removed from team |  -  |
+|**400** | Invalid request body or error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **teamsUsersPut**
-> { [key: string]: any; } teamsUsersPut(request)
+> DtoAddUserToTeamResponse teamsUsersPut(request)
 
-Add a user to a team by providing user ID and team ID
+Adds a user to a team by providing user ID and team ID
 
 ### Example
 
@@ -382,7 +1234,7 @@ const { status, data } = await apiInstance.teamsUsersPut(
 
 ### Return type
 
-**{ [key: string]: any; }**
+**DtoAddUserToTeamResponse**
 
 ### Authorization
 
@@ -397,8 +1249,8 @@ const { status, data } = await apiInstance.teamsUsersPut(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | User added to team |  -  |
-|**400** | Bad Request: Invalid request body or missing userId or teamId |  -  |
+|**200** | OK |  -  |
+|**400** | Invalid request body or error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -493,6 +1345,60 @@ const { status, data } = await apiInstance.usersIdDelete(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **usersIdFriendsGet**
+> Array<EntityUser> usersIdFriendsGet()
+
+Get list of friends for a user (accepted requests)
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //User ID (default to undefined)
+
+const { status, data } = await apiInstance.usersIdFriendsGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | User ID | defaults to undefined|
+
+
+### Return type
+
+**Array<EntityUser>**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -548,8 +1454,64 @@ const { status, data } = await apiInstance.usersIdGet(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **usersIdPut**
-> EntityUser usersIdPut(user)
+# **usersIdMutualOtherIdGet**
+> Array<EntityUser> usersIdMutualOtherIdGet()
+
+Get list of mutual friends between userA and userB
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //User A ID (default to undefined)
+let otherId: string; //User B ID (default to undefined)
+
+const { status, data } = await apiInstance.usersIdMutualOtherIdGet(
+    id,
+    otherId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | User A ID | defaults to undefined|
+| **otherId** | [**string**] | User B ID | defaults to undefined|
+
+
+### Return type
+
+**Array<EntityUser>**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **usersIdPasswordPut**
+> { [key: string]: string; } usersIdPasswordPut(request)
 
 
 ### Example
@@ -558,18 +1520,18 @@ const { status, data } = await apiInstance.usersIdGet(
 import {
     DefaultApi,
     Configuration,
-    EntityUser
+    DtoUserPasswordRequestDTO
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new DefaultApi(configuration);
 
 let id: string; //The user\'s ID (default to undefined)
-let user: EntityUser; //The updated user
+let request: DtoUserPasswordRequestDTO; //The password update request
 
-const { status, data } = await apiInstance.usersIdPut(
+const { status, data } = await apiInstance.usersIdPasswordPut(
     id,
-    user
+    request
 );
 ```
 
@@ -577,13 +1539,13 @@ const { status, data } = await apiInstance.usersIdPut(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **user** | **EntityUser**| The updated user | |
+| **request** | **DtoUserPasswordRequestDTO**| The password update request | |
 | **id** | [**string**] | The user\&#39;s ID | defaults to undefined|
 
 
 ### Return type
 
-**EntityUser**
+**{ [key: string]: string; }**
 
 ### Authorization
 
@@ -600,13 +1562,122 @@ const { status, data } = await apiInstance.usersIdPut(
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
 |**400** | Bad Request |  -  |
-|**404** | User not found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **usersIdPatch**
+> DtoUserUpdateResponseDTO usersIdPatch(request)
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration,
+    DtoUserUpdateRequestDTO
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //The user\'s ID (default to undefined)
+let request: DtoUserUpdateRequestDTO; //The user profile update (all fields optional)
+
+const { status, data } = await apiInstance.usersIdPatch(
+    id,
+    request
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **request** | **DtoUserUpdateRequestDTO**| The user profile update (all fields optional) | |
+| **id** | [**string**] | The user\&#39;s ID | defaults to undefined|
+
+
+### Return type
+
+**DtoUserUpdateResponseDTO**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **usersIdStatisticsGet**
+> DtoStatisticsResponse usersIdStatisticsGet()
+
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let id: string; //The user\'s ID (default to undefined)
+
+const { status, data } = await apiInstance.usersIdStatisticsGet(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] | The user\&#39;s ID | defaults to undefined|
+
+
+### Return type
+
+**DtoStatisticsResponse**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **usersIdStatisticsPut**
-> DtoUpdateStatisticsResponse usersIdStatisticsPut(request)
+> DtoStatisticsResponse usersIdStatisticsPut(request)
 
 
 ### Example
@@ -640,7 +1711,7 @@ const { status, data } = await apiInstance.usersIdStatisticsPut(
 
 ### Return type
 
-**DtoUpdateStatisticsResponse**
+**DtoStatisticsResponse**
 
 ### Authorization
 
@@ -657,7 +1728,7 @@ const { status, data } = await apiInstance.usersIdStatisticsPut(
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
 |**400** | Bad Request |  -  |
-|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -713,6 +1784,7 @@ No authorization required
 |**200** | OK |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -765,13 +1837,15 @@ No authorization required
 |-------------|-------------|------------------|
 |**201** | Created |  -  |
 |**400** | Bad Request |  -  |
+|**409** | Conflict |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **voiceTeamIdGet**
-> voiceTeamIdGet()
+# **voiceJoinRoomIdGet**
+> voiceJoinRoomIdGet()
 
+Establishes a WebSocket connection for voice communication in a room
 
 ### Example
 
@@ -784,11 +1858,11 @@ import {
 const configuration = new Configuration();
 const apiInstance = new DefaultApi(configuration);
 
-let teamId: string; //Team ID (default to undefined)
-let userId: string; //User ID (default to undefined)
+let roomId: string; //Room ID to join (default to undefined)
+let userId: string; //User ID joining the room (default to undefined)
 
-const { status, data } = await apiInstance.voiceTeamIdGet(
-    teamId,
+const { status, data } = await apiInstance.voiceJoinRoomIdGet(
+    roomId,
     userId
 );
 ```
@@ -797,8 +1871,8 @@ const { status, data } = await apiInstance.voiceTeamIdGet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **teamId** | [**string**] | Team ID | defaults to undefined|
-| **userId** | [**string**] | User ID | defaults to undefined|
+| **roomId** | [**string**] | Room ID to join | defaults to undefined|
+| **userId** | [**string**] | User ID joining the room | defaults to undefined|
 
 
 ### Return type
@@ -818,16 +1892,127 @@ void (empty response body)
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**101** | Switching Protocols - WebSocket connection established |  -  |
+|**101** | Switching Protocols |  -  |
 |**400** | Bad Request |  -  |
-|**401** | Unauthorized |  -  |
-|**403** | Room is full |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **voiceTeamIdLeaveDelete**
-> { [key: string]: string; } voiceTeamIdLeaveDelete()
+# **voiceJoinableGet**
+> Array<ControllerRoomResponse> voiceJoinableGet()
 
+Returns all group and private rooms that the user is authorized to join and are not full
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let userId: string; //User ID of the client (default to undefined)
+
+const { status, data } = await apiInstance.voiceJoinableGet(
+    userId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **userId** | [**string**] | User ID of the client | defaults to undefined|
+
+
+### Return type
+
+**Array<ControllerRoomResponse>**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **voicePrivateCallPost**
+> EntityVoiceRoom voicePrivateCallPost()
+
+Creates a private voice room for two users with restricted access
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let callerId: string; //ID of the user initiating the call (default to undefined)
+let targetId: string; //ID of the user being called (default to undefined)
+let teamId: string; //Team ID for context (optional) (default to undefined)
+
+const { status, data } = await apiInstance.voicePrivateCallPost(
+    callerId,
+    targetId,
+    teamId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **callerId** | [**string**] | ID of the user initiating the call | defaults to undefined|
+| **targetId** | [**string**] | ID of the user being called | defaults to undefined|
+| **teamId** | [**string**] | Team ID for context | (optional) defaults to undefined|
+
+
+### Return type
+
+**EntityVoiceRoom**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **voiceRoomsTeamIdGet**
+> Array<ControllerRoomResponse> voiceRoomsTeamIdGet()
+
+Returns all group voice rooms belonging to a specific team
 
 ### Example
 
@@ -841,11 +2026,9 @@ const configuration = new Configuration();
 const apiInstance = new DefaultApi(configuration);
 
 let teamId: string; //Team ID (default to undefined)
-let userId: string; //User ID (default to undefined)
 
-const { status, data } = await apiInstance.voiceTeamIdLeaveDelete(
-    teamId,
-    userId
+const { status, data } = await apiInstance.voiceRoomsTeamIdGet(
+    teamId
 );
 ```
 
@@ -854,12 +2037,11 @@ const { status, data } = await apiInstance.voiceTeamIdLeaveDelete(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **teamId** | [**string**] | Team ID | defaults to undefined|
-| **userId** | [**string**] | User ID | defaults to undefined|
 
 
 ### Return type
 
-**{ [key: string]: string; }**
+**Array<ControllerRoomResponse>**
 
 ### Authorization
 
@@ -868,15 +2050,71 @@ const { status, data } = await apiInstance.voiceTeamIdLeaveDelete(
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Successfully left room |  -  |
-|**401** | Unauthorized |  -  |
-|**404** | Room not found |  -  |
+|**200** | OK |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **voiceRoomsTeamIdPost**
+> EntityVoiceRoom voiceRoomsTeamIdPost()
+
+Creates a new voice room for team members
+
+### Example
+
+```typescript
+import {
+    DefaultApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new DefaultApi(configuration);
+
+let teamId: string; //Team ID (default to undefined)
+let userId: string; //User ID of the creator (default to undefined)
+let name: string; //Room name (optional) (optional) (default to undefined)
+
+const { status, data } = await apiInstance.voiceRoomsTeamIdPost(
+    teamId,
+    userId,
+    name
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | [**string**] | Team ID | defaults to undefined|
+| **userId** | [**string**] | User ID of the creator | defaults to undefined|
+| **name** | [**string**] | Room name (optional) | (optional) defaults to undefined|
+
+
+### Return type
+
+**EntityVoiceRoom**
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created |  -  |
+|**409** | Conflict |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
