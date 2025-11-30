@@ -83,7 +83,6 @@ export default function SolveQuiz() {
       });
       console.log("Attempts being sent:", attempts);
       const payload: DtoSolveQuizRequest = {
-        quiz_id: quizId,
         attempts
       };
       console.log("Full payload:", JSON.stringify(payload, null, 2));
