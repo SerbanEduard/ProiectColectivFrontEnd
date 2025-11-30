@@ -1,5 +1,6 @@
-import { NavLink } from "react-router-dom";
-import { GraduationCap, Users, Settings, UserPlus } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Users, Settings, UserPlus } from "lucide-react";
+import logo from '../../assets/logo-clean.png' 
 import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 
 export default function Navbar() {
@@ -10,12 +11,16 @@ export default function Navbar() {
                 : "text-gray-100 hover:text-gray-300"
         }`;
 
+    const navigate = useNavigate();
+
     return (
         <div className="border-b border-neutral-800 bg-neutral-900 text-gray-100 shadow-sm">
             <div className="flex items-center justify-between px-6 py-3">
                 {/* Logo */}
-                <div className="flex items-center gap-2 text-lg font-semibold">
-                    <GraduationCap className="h-5 w-5 text-yellow-500" />
+                <div className="flex items-center gap-2 text-lg font-semibold cursor-pointer" 
+                    onClick={() => navigate("/home")}
+                >
+                    <img src={logo} alt="StudyFlow logo" className="h-6 w-auto" />
                     <span>StudyFlow</span>
                 </div>
 

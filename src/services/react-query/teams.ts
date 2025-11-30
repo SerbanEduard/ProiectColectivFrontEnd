@@ -1,7 +1,8 @@
 import {useMutation} from "@tanstack/react-query";
-import type {DtoTeamRequest, EntityTeam} from "@/api";
+import type {ControllerMessageRequestUnion, DtoMessageDTO, DtoTeamMessageRequest, DtoTeamRequest, EntityTeam} from "@/api";
 import { api } from './api'
 import {useTeamStore} from "@/services/stores/useTeamStore.ts";
+import { useAuthStore } from "../stores/useAuthStore";
 
 
 
@@ -51,3 +52,75 @@ export const useJoinTeam = () => {
         }
     );
 };
+
+export const useOpenTeam = () => {
+    return useMutation<undefined | EntityTeam, Error, {teamId: string}>({
+        mutationFn: async ({ teamId }) => {
+            const store = useTeamStore.getState();
+            try{
+                store.setOpenTeam(teamId)
+                return undefined
+            } catch {
+                const res = await api.teamsIdGet(teamId).then(r => r.data).catch(() => null)
+                if (!res) throw new Error(`Team with id ${teamId} not found`)
+                return res as EntityTeam
+            }
+        },
+
+        onSuccess: (optionalTeam) => {
+            const store = useTeamStore.getState()
+            if (!optionalTeam) return
+            // Add fetched team to store and open it
+            try {
+                store.addTeam(optionalTeam)
+                const id = optionalTeam.id
+                if (id) store.setOpenTeam(id)
+            } catch (e) {
+                console.error("Failed to add/open fetched team:", e)
+            }
+        }
+    })
+}
+
+
+export const useGetTeamMessages = () => {
+    const teamStore = useTeamStore();
+
+    return useMutation<DtoMessageDTO[],Error, {teamId : string}>({
+        mutationFn: ({teamId}) =>
+            api.messagesGet(
+            "team",
+            undefined,
+            undefined,
+            teamId
+        ).then(res => res.data),
+
+        onSuccess: (dto) => {
+            teamStore.setTeamMessages(dto.sort((a, b) => Date.parse(a.sentAt!) - Date.parse(b.sentAt!)))
+        }
+    })
+}
+
+export const useSendTeamMessage = () => {
+    const teamStore = useTeamStore();
+    const {user} = useAuthStore();
+
+    return useMutation<DtoMessageDTO,Error,DtoTeamMessageRequest>({
+        mutationFn: (teamMessageRequest) => api.messagesPost(
+            "team",
+            teamMessageRequest as ControllerMessageRequestUnion
+        ).then(res => res.data),
+
+        onMutate: (dto) => {
+            teamStore.addSentMessage(
+                {
+                    sender:{
+                        ...user
+                    },
+                    sentAt: new Date().toISOString(),
+                    textContent: dto.textContent
+                }
+            )
+        }
+    })
+}

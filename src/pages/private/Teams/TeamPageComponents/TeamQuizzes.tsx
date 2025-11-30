@@ -11,16 +11,16 @@ interface TeamQuizzesProps { teamId: string; }
 
 export default function TeamQuizzes({ teamId }: TeamQuizzesProps) {
   const navigate = useNavigate();
-  const { mutate, data, isPending, isError, error } = useGetTeamQuizzes(teamId);
+  const { mutate : getTeamQuizzes, data, isPending, isError, error } = useGetTeamQuizzes(teamId);
 
   useEffect(() => {
-    mutate();
-  }, [mutate]);
+    getTeamQuizzes();
+  }, [getTeamQuizzes]);
 
   const quizzes: EntityQuiz[] = data || [];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex-1 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Team Quizzes</h2>
         <div className="flex gap-2">
@@ -28,7 +28,7 @@ export default function TeamQuizzes({ teamId }: TeamQuizzesProps) {
             <Plus className="h-4 w-4 mr-2" />
             Create Quiz
           </Button>
-          <Button variant="outline" onClick={() => mutate()} disabled={isPending}>Refresh</Button>
+          <Button variant="outline" onClick={() => getTeamQuizzes()} disabled={isPending}>Refresh</Button>
         </div>
       </div>
       {isPending && (
