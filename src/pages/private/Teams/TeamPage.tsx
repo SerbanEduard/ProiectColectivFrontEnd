@@ -15,7 +15,8 @@ export type Screen =
     "VoiceRoom" |
     "Files"     |
     "Events"    |
-    "Calendar"
+    "Calendar"  |
+    "Quizzes"
 
 
 export default function TeamPage() {
@@ -62,6 +63,9 @@ export default function TeamPage() {
                         }
                         {openScreen == "ChatRoom" &&
                             <TeamChatRoom roomId={roomId}/>
+                        }
+                        {openScreen == "Quizzes" &&
+                            <TeamQuizzes teamId={teamId!}/>
                         }
                     </div>
                 </div>

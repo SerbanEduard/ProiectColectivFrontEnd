@@ -164,7 +164,7 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
               <SidebarGroupContent>
                   <SidebarMenuSub className="gap-y-3">
                   {voiceRooms.map((item) => (
-                      <SidebarMenuItem className="cursor-pointer" key={item.title} onClick={()=> onSelect(`voice:${item.title}`)}>
+                      <SidebarMenuItem className="cursor-pointer" key={item.title}>
                         <SidebarMenuButton asChild>
                           <div className="justify-between">
                             <p className="line-clamp-1">{item.title}</p>
@@ -183,7 +183,7 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
           </Collapsible>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel onClick={() => onSelect('files')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
                   <div className="flex items-center gap-10">
                     <FolderClosed/>
                     Team Files
@@ -193,7 +193,7 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel onClick={() => onSelect('events')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
                   <div className="flex items-center gap-10">
                     <CalendarClock/>
                     Events
@@ -203,7 +203,7 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel onClick={() => onSelect('calendar')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
                   <div className="flex items-center gap-10">
                     <CalendarDays/>
                     Calendar
@@ -213,7 +213,10 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarGroupLabel onClick={() => onSelect('quizzes')} className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer">
+              <SidebarGroupLabel 
+                onClick={() => openScreenFn("Quizzes")}
+                className="font-bold text-sm h-10 hover:text-primary hover:bg-accent cursor-pointer"
+              >
                   <div className="flex items-center gap-10">
                     <BookOpenText/>
                     Quizzes
