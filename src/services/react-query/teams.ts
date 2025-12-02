@@ -2,7 +2,7 @@ import {useMutation} from "@tanstack/react-query";
 import type {DtoTeamRequest, EntityTeam} from "@/api";
 import { api } from './api'
 import {useTeamStore} from "@/services/stores/useTeamStore.ts";
-
+import type { DtoAddUserToTeamResponse } from "@/api";
 
 
 export const useGetTeams = () => {
@@ -32,17 +32,15 @@ export const useAddTeam = () => {
 }
 
 export const useJoinTeam = () => {
-    return useMutation<EntityTeam, Error, { teamId: string; userId: string }>(
+    return useMutation<DtoAddUserToTeamResponse, Error, { teamId: string; userId: string }>(
         {
             mutationFn: ({ teamId, userId }) =>
-                api.teamsUsersPut({
-                    teamId,
-                    userId
-                }).then(res => res.data),
+                api.teamsUsersPut({teamId, userId}).then(res => res.data),
 
-            onSuccess: (updatedTeam) => {
-                const store = useTeamStore.getState();
-                store.updateTeam(updatedTeam);
+            onSuccess: (data) => {
+                if (!data.team || !data) return;
+                const team = useTeamStore.getState();
+                if(data) team.updateTeam(data.team);
             },
 
             onError: (err) => {
