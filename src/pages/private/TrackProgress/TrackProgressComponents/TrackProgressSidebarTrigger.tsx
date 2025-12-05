@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { PanelLeftClose, PanelRightClose } from "lucide-react";
 
-export function TeamSidebarTrigger() {
-  const { toggleSidebar, open } = useSidebar();
+export default function TrackProgressSidebarTrigger() {
+    const { toggleSidebar, open } = useSidebar();
 
   return (
     <Button

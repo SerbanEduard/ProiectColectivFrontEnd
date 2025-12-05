@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:api": "openapi-generator-cli generate -i https://studyflowbackend.onrender.com/swagger/doc.json -g typescript-axios -o ./src/api"
+    "generate:api": "openapi-generator-cli generate -i https://studyflowbackend.onrender.com/swagger/doc.json -g typescript-axios -o ./src/api",
+    "generate:localApi": "openapi-generator-cli generate -i http://localhost:8080/swagger/doc.json -g typescript-axios -o ./src/api"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -20,6 +21,7 @@
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-menubar": "^1.1.16",
+    "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
@@ -46,8 +48,8 @@
     "@eslint/js": "^9.36.0",
     "@openapitools/openapi-generator-cli": "^2.25.0",
     "@types/node": "^24.9.1",
-    "@types/react": "^19.1.16",
-    "@types/react-dom": "^19.1.9",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.4",
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^9.36.0",
