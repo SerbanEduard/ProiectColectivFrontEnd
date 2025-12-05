@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { TeamChatRoom } from "./TeamPageComponents/TeamChatRoom";
 import { Card } from "@/components/ui/card";
 import TeamQuizzes from "./TeamPageComponents/TeamQuizzes";
+import { TeamVoiceRoom } from "./TeamPageComponents/TeamVoiceRoom";
 
 export type Screen =
     "Dashboard" |
@@ -66,6 +67,9 @@ export default function TeamPage() {
                         }
                         {openScreen == "Quizzes" &&
                             <TeamQuizzes teamId={teamId!}/>
+                        }
+                        {openScreen == "VoiceRoom" &&
+                            <TeamVoiceRoom />
                         }
                     </div>
                 </div>
