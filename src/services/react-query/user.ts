@@ -4,6 +4,7 @@ import { api } from "./api"
 import { useAuthStore } from "../stores/useAuthStore";
 import { useStatisticsStore } from "../stores/useStatisticsStore";
 
+// When database has stat data for everyone this will be removed
 const MOCK_TIME_ON_TEAM = [
   {
     duration: 120000,
@@ -18,6 +19,9 @@ const MOCK_TIME_ON_TEAM = [
     teamId: "team-3"
   }
 ]
+
+// When database has stat data for everyone this will be removed
+const MOCK_TOTAL_TIME = 2400000; // 40 minutes in milliseconds
 
 export const useUpdateUserData = () => {
   return useMutation<DtoUserUpdateResponseDTO, Error, { id: string, user: DtoUserUpdateRequestDTO }>({
@@ -46,10 +50,23 @@ export const useGetUserStatistics = () => {
       api.usersIdStatisticsGet(id).then(res => res.data),
     onSuccess: (data) => {
       const stats = useStatisticsStore.getState();
+
       if(data) {
-        data.timeSpentOnTeams = MOCK_TIME_ON_TEAM;
+        // When database has stat data for everyone this will be removed
+        if (!data.timeSpentOnTeams)
+          data.timeSpentOnTeams = MOCK_TIME_ON_TEAM;
         stats.setStats(data);
       }
+    },
+    onError: () => {
+      // When database has stat data for everyone this will be removed
+      const stats = useStatisticsStore.getState();
+      const mock_data : DtoStatisticsResponse = {
+        timeSpentOnTeams: MOCK_TIME_ON_TEAM,
+        totalTimeSpentOnApp: MOCK_TOTAL_TIME,
+        userId: "mock-user-id"
+      };
+      stats.setStats(mock_data);
     }
   });
 }
