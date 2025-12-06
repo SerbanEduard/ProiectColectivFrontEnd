@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { type DtoLoginRequest, type DtoLoginResponse, type DtoSignUpUserRequest, type DtoSignUpUserResponse } from '../../api'
 import { useAuthStore } from '../stores/useAuthStore'
 import { api } from './api'
+import { useStatisticsStore } from '../stores/useStatisticsStore';
 
 export const useSignup = () => {
   return useMutation<DtoSignUpUserResponse, Error, DtoSignUpUserRequest>({
@@ -28,6 +29,8 @@ export const useLogout = () => {
     mutationFn: () => { return Promise.resolve(); },
     onSuccess: () => {
       const { logout : logoutFunction } = useAuthStore.getState();
+      const { logout : clearStats } = useStatisticsStore.getState();
+      clearStats();
       logoutFunction();
     }
   });
