@@ -4,7 +4,7 @@ import { getJoinableRooms } from '@/services/react-query/voice';
 import { useAuthStore } from '@/services/stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { api as generatedApi } from '@/services/react-query/api';
-import { sendDirectMessageWithRetry } from '@/services/api/messages';
+import { sendDirectMessageWithRetry } from '@/services/react-query/messages';
 import { useVoiceStore } from '@/services/stores/useVoiceStore';
 
 export default function CallNotifier() {

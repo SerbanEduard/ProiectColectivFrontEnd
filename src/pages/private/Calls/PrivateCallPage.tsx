@@ -6,7 +6,7 @@ import { useVoiceStore } from '@/services/stores/useVoiceStore';
 import { PrivateVoiceRoom } from '@/pages/private/Calls/PrivateVoiceRoom';
 import { Button } from '@/components/ui/button';
 import { api as generatedApi } from '@/services/react-query/api';
-import { sendDirectMessageWithRetry } from '@/services/api/messages';
+import { sendDirectMessageWithRetry } from '@/services/react-query/messages';
 import { toast } from 'sonner';
 const WSPATH = import.meta.env.VITE_WSPATH;
 
