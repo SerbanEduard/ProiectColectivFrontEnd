@@ -2,14 +2,17 @@ import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useVoiceStore } from "@/services/stores/useVoiceStore";
-import { buildJoinWsUrl } from "@/services/react-query/voice";
+// buildJoinWsUrl moved to signaling helper
 import { useAuthStore } from "@/services/stores/useAuthStore";
-import { DefaultApi, Configuration } from "@/api";
+import { DefaultApi } from "@/api";
+import { makeApi, stopAllRemoteAudio } from '@/services/react-query/voiceHelpers';
+import { createSignalingConnection } from '@/services/react-query/voiceSignaling';
 
 export function TeamVoiceRoom({ autoJoin, onCallEnded }: { autoJoin?: boolean, onCallEnded?: () => void } = { autoJoin: false }) {
   const { selectedRoomId, users, addUser, removeUser, setWs, ws, setUsers, setSpeaking, speaking } = useVoiceStore();
   const { user, token } = useAuthStore();
   const [joined, setJoined] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const pcRefs = useRef<Record<string, RTCPeerConnection>>({});
   const pcOfferTimersRef = useRef<Record<string, number>>({});
   const cleanupTimerRef = useRef<number | null>(null);
@@ -17,92 +20,18 @@ export function TeamVoiceRoom({ autoJoin, onCallEnded }: { autoJoin?: boolean, o
   const audioCtxRef = useRef<any | null>(null);
   const audioElsRef = useRef<Record<string, HTMLAudioElement>>({});
 
-  const stopAllRemoteAudio = (clearSrc = true) => {
-    try {
-      Object.values(audioElsRef.current).forEach((el) => {
-        try {
-          el.pause();
-          el.muted = true;
-          if (clearSrc) {
-            try { (el as any).srcObject = null; } catch {};
-          }
-        } catch {}
-      });
-    } catch {}
-  };
-  
   // Create API instance for fetching user data
   const apiRef = useRef<DefaultApi | null>(null);
   useEffect(() => {
     if (token) {
-      const basePath = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-      const config = new Configuration({ 
-        apiKey: `Bearer ${token}`,
-        basePath: basePath
-      });
-      apiRef.current = new DefaultApi(config);
-      console.log('[TeamVoice] API configured with basePath:', basePath);
+      apiRef.current = makeApi(token);
+      console.log('[TeamVoice] API configured via voiceHelpers');
     }
   }, [token]);
-
-  
 
   useEffect(() => {
     if (!ws) setJoined(false);
   }, [ws]);
-
-  // Helper to fetch and update user info
-  const fetchAndUpdateUserInfo = async (userId: string) => {
-    if (!apiRef.current) {
-      console.log('[TeamVoice] API not ready for', userId);
-      // still ensure a friendly placeholder so UI doesn't show raw id-only feeling
-      const current = useVoiceStore.getState().users;
-      if (!current.some((u) => String(u.userId) === String(userId))) {
-        setUsers([...current, { userId: String(userId), username: `User ${String(userId).slice(-4)}` }]);
-      }
-      return;
-    }
-    try {
-      console.log('[TeamVoice] fetching user info for', userId);
-      const resp = await apiRef.current.usersIdGet(userId);
-      console.log('[TeamVoice] got response for', userId, resp);
-      const userData = (resp as any)?.data || resp;
-      console.log('[TeamVoice] userData extracted:', userData);
-
-      if (userData && (userData.username || userData.firstname)) {
-        console.log('[TeamVoice] updating with username:', userData.username || userData.firstname);
-        const current = useVoiceStore.getState().users;
-        const updated = current.map((u) => 
-          String(u.userId) === String(userId) 
-            ? { ...u, username: userData.username || userData.firstname || u.username }
-            : u
-        );
-        if (!updated.some((u) => String(u.userId) === String(userId))) {
-          updated.push({ userId: String(userId), username: userData.username || userData.firstname });
-        }
-        setUsers(updated);
-      } else {
-        console.log('[TeamVoice] no username/firstname in userData, applying fallback display name');
-        const current = useVoiceStore.getState().users;
-        const updated = current.map((u) => (String(u.userId) === String(userId) ? { ...u, username: `User ${String(userId).slice(-4)}` } : u));
-        if (!updated.some((u) => String(u.userId) === String(userId))) updated.push({ userId: String(userId), username: `User ${String(userId).slice(-4)}` });
-        setUsers(updated);
-      }
-    } catch (e) {
-      console.error('[TeamVoice] fetch user info failed for', userId, e);
-      // apply a fallback display name if API fails
-      try {
-        const current = useVoiceStore.getState().users;
-        const fallback = `User ${String(userId).slice(-4)}`;
-        if (!current.some((u) => String(u.userId) === String(userId))) {
-          setUsers([...current, { userId: String(userId), username: fallback }]);
-        } else {
-          const updated = current.map((u) => (String(u.userId) === String(userId) ? { ...u, username: fallback } : u));
-          setUsers(updated);
-        }
-      } catch {}
-    }
-  };
 
   useEffect(() => {
     // cleanup when switching rooms: schedule a delayed cleanup (grace) so quick rejoin can reuse streams
@@ -111,7 +40,7 @@ export function TeamVoiceRoom({ autoJoin, onCallEnded }: { autoJoin?: boolean, o
     if (ws) { try { ws.close(); } catch {} setWs(undefined); }
     try {
       // stop audio immediately for UI correctness while leaving the room
-      stopAllRemoteAudio(true);
+      stopAllRemoteAudio(audioElsRef.current, true);
       try { if (cleanupTimerRef.current) { clearTimeout(cleanupTimerRef.current); } } catch {}
       cleanupTimerRef.current = window.setTimeout(() => {
         try {
@@ -126,373 +55,43 @@ export function TeamVoiceRoom({ autoJoin, onCallEnded }: { autoJoin?: boolean, o
   }, [selectedRoomId]);
 
   const doJoin = async () => {
-    if (!selectedRoomId || !user?.id) return;
-    
-    // Ensure a single AudioContext instance and resume it on user gesture to allow autoplay
+    console.log('[TeamVoice] doJoin triggered', { selectedRoomId, userId: user?.id });
+    if (isJoining) {
+      console.debug('[TeamVoice] already joining, ignoring duplicate call');
+      return;
+    }
+    if (!selectedRoomId || !user?.id) {
+      console.warn('[TeamVoice] doJoin aborted - missing roomId or user');
+      return;
+    }
+    setIsJoining(true);
+    // compact: use shared signaling setup to keep technical logic out of the UI component
     try {
-      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtx) {
-        if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
-        try { await audioCtxRef.current.resume(); } catch {}
-        // Try to unlock audio playback by generating a very short silent tone on user gesture
-        try {
-          const osc = audioCtxRef.current.createOscillator();
-          const gain = audioCtxRef.current.createGain();
-          gain.gain.value = 0; // silent
-          osc.connect(gain);
-          gain.connect(audioCtxRef.current.destination);
-          osc.start();
-          setTimeout(() => { try { osc.stop(); osc.disconnect(); gain.disconnect(); } catch {} }, 50);
-        } catch (e) {}
-      }
-    } catch (e) {
-      // ignore
-    }
-    
-    const base = buildJoinWsUrl(selectedRoomId, String(user.id));
-    const url = token ? `${base}&token=${encodeURIComponent(token)}` : base;
-    const conn = new WebSocket(url);
-    setWs(conn);
-    // if we had a pending cleanup from a recent close, cancel it because user is rejoining
-    try { if (cleanupTimerRef.current) { clearTimeout(cleanupTimerRef.current); cleanupTimerRef.current = null; } } catch {}
-
-    let vadRunning = false;
-    function sendSafe(payload: any) {
-      try {
-        const ready = conn && conn.readyState;
-        console.log('[TeamVoice] sendSafe, ws.readyState=', ready);
-        if (conn && conn.readyState === WebSocket.OPEN) {
-          conn.send(typeof payload === 'string' ? payload : JSON.stringify(payload));
-        } else {
-          console.warn('[TeamVoice] ws not open');
-        }
-      } catch {}
-    }
-
-    conn.onopen = async () => {
-      console.log('TeamVoiceRoom: ws onopen fired, readyState=', conn.readyState);
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log('TeamVoiceRoom: obtained local media stream', stream);
-        localStreamRef.current = stream;
-        setJoined(true);
-        addUser({ userId: String(user.id), username: (user as any).username || `You` });
-        try { sendSafe({ type: 'ready' }); } catch {}
-
-        // simple VAD: analyze audio levels and notify peers
-        try {
-          const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-          const audioCtx = new AudioCtx();
-          const source = audioCtx.createMediaStreamSource(stream);
-          const analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 2048;
-          source.connect(analyser);
-          const data = new Uint8Array(analyser.frequencyBinCount);
-          let speakingState = false;
-          vadRunning = true;
-          const sample = () => {
-            if (!vadRunning) return;
-            analyser.getByteTimeDomainData(data);
-            let sum = 0;
-            for (let i = 0; i < data.length; i++) {
-              const v = (data[i] - 128) / 128;
-              sum += v * v;
-            }
-            const rms = Math.sqrt(sum / data.length);
-            const isSpeaking = rms > 0.02;
-            if (isSpeaking !== speakingState) {
-              speakingState = isSpeaking;
-              try { setSpeaking && setSpeaking(String(user.id), isSpeaking); } catch {}
-              try { sendSafe({ type: 'activity', active: isSpeaking }); } catch {}
-            }
-            requestAnimationFrame(sample);
-          };
-          sample();
-        } catch (e) {
-          // ignore vad errors
-        }
-      } catch (e) { console.error('getUserMedia failed', e); }
-    };
-
-    conn.onmessage = async (evt) => {
-      try {
-        console.log('TeamVoiceRoom: raw ws message', evt.data);
-        const msg = JSON.parse(evt.data);
-        // handle call-ended messages for private calls
-        if (msg.type === 'call-ended') {
-          try { conn.close(); } catch {}
-          setJoined(false);
-          setWs(undefined);
-          setUsers([]);
-          try { if (onCallEnded) onCallEnded(); } catch {}
-          return;
-        }
-        const from = msg.from;
-        if (msg.type === 'room-info' && Array.isArray(msg.users)) {
-          // msg.users can be either an array of userId strings OR an array of user objects
-            const normalized = msg.users.map((entry: any) => {
-            if (entry && typeof entry === 'object') {
-              const uid = String(entry.userId ?? entry.id ?? entry.user ?? '');
-              const username = entry.username ?? entry.name ?? entry.displayName ?? uid;
-              // if this is the current user, prefer the auth-provided username
-              if (String(uid) === String(user?.id) && (user as any)?.username) {
-                return { userId: uid, username: (user as any).username };
-              }
-              return { userId: uid, username };
-            }
-            return { userId: String(entry), username: String(entry) };
-          });
-          console.log('[TeamVoice] room-info received with users (normalized):', normalized);
-          setUsers(normalized);
-          // Fetch missing usernames for entries where username equals id or is empty
-          normalized.forEach((u: any) => {
-            if (String(user?.id) !== String(u.userId) && (!u.username || u.username === u.userId)) {
-              console.log('[TeamVoice] triggering fetch for', u.userId);
-              fetchAndUpdateUserInfo(String(u.userId));
-            }
-          });
-          return;
-        }
-        if (msg.type === 'ready' && from) {
-          // immediately show the user in participant list
-          console.log('[TeamVoice] ready message from', from);
-          addUser(String(from));
-          // fetch their username from API
-          fetchAndUpdateUserInfo(String(from));
-          if (!pcRefs.current[from]) {
-            const pc = new RTCPeerConnection({
-              iceServers: [
-                { urls: "stun:stun.l.google.com:19302" },
-              ],
-            });
-            // set a fallback timer: if the other side doesn't send SDP, create an offer after a short delay
-            if (pcOfferTimersRef.current[from]) {
-              try { clearTimeout(pcOfferTimersRef.current[from]); } catch {}
-            }
-            pcOfferTimersRef.current[from] = window.setTimeout(async () => {
-              try {
-                // only create offer if we don't already have a remote description
-                const existingPc = pcRefs.current[from];
-                if (!existingPc) return;
-                const hasRemote = !!existingPc.remoteDescription;
-                if (!hasRemote) {
-                  console.log('[TeamVoice] fallback: creating offer for', from);
-                  const offer = await existingPc.createOffer();
-                  await existingPc.setLocalDescription(offer);
-                  try { conn.send(JSON.stringify({ type: 'sdp', sdp: offer, to: from })); } catch (err) { console.warn('[TeamVoice] fallback send sdp failed', err); }
-                }
-              } catch (e) { console.warn('[TeamVoice] fallback offer failed', e); }
-            }, 700);
-            pcRefs.current[from] = pc;
-            if (localStreamRef.current) {
-              localStreamRef.current.getTracks().forEach((t) => {
-                try {
-                  pc.addTrack(t, localStreamRef.current!);
-                  console.log('TeamVoiceRoom: added local track', t.kind, t.id, 'to pc for', from);
-                } catch (e) { console.warn('TeamVoiceRoom: addTrack failed', e); }
-              });
-              try { console.log('TeamVoiceRoom: pc.getSenders after addTrack', pc.getSenders().map(s => ({trackKind: s.track?.kind, id: s.track?.id}))); } catch (e) {}
-            }
-            pc.ontrack = (ev) => {
-              console.log('[TeamVoice] ontrack fired for', from, 'track:', ev.track.kind, ev.streams.length, 'streams');
-              const remoteStream = ev.streams && ev.streams[0] ? ev.streams[0] : new MediaStream([ev.track]);
-              console.log('[TeamVoice] remoteStream:', remoteStream.id, 'active:', remoteStream.active, 'audioTracks:', remoteStream.getAudioTracks().length);
-              
-              let audioEl = audioElsRef.current[from];
-              if (!audioEl) {
-                audioEl = document.createElement('audio');
-                audioEl.autoplay = true;
-                // start muted until we ensure audio context/resume, then unmute when play allowed
-                audioEl.muted = true;
-                audioEl.volume = 1.0;
-                audioEl.setAttribute('playsinline', '');
-                audioEl.style.display = 'none';
-                document.body.appendChild(audioEl);
-                audioElsRef.current[from] = audioEl;
-                console.log('[TeamVoice] created audio element for', from);
-              }
-              audioEl.srcObject = remoteStream;
-              console.log('[TeamVoice] assigned srcObject to audio element');
-              
-              // Retry play with more aggressive timing and a longer backoff
-              const tryPlay = async (retries = 10, delay = 150) => {
-                try {
-                  if (audioCtxRef.current) {
-                    try { await audioCtxRef.current.resume(); } catch {}
-                  }
-                } catch {}
-                for (let i = 0; i < retries; i++) {
-                  try {
-                    console.log('[TeamVoice] attempting play for', from, 'attempt', i + 1);
-                    const playPromise = audioEl.play();
-                    if (playPromise) {
-                      await playPromise;
-                    }
-                    // Unmute only after successful play to avoid autoplay blocks
-                    try { audioEl.muted = false; } catch {}
-                    console.log('[TeamVoice] audio playing successfully for', from);
-                    return true;
-                  } catch (err: any) {
-                    console.warn('[TeamVoice] play attempt', i + 1, 'failed for', from, ':', err?.message);
-                    if (i < retries - 1) {
-                      await new Promise(r => setTimeout(r, delay));
-                    }
-                  }
-                }
-                console.error('[TeamVoice] all play attempts failed for', from, '— user gesture may be required.');
-                return false;
-              };
-              tryPlay();
-              addUser(String(from));
-            };
-            pc.onicecandidate = (e) => { if (e.candidate) { try { console.log('TeamVoice: sending ice to', from, e.candidate); conn.send(JSON.stringify({ type: 'ice', candidate: e.candidate, to: from })); } catch (err) { console.warn('send ice failed', err); } } };
-            pc.oniceconnectionstatechange = () => { console.log('TeamVoice: iceConnectionState for', from, pc.iceConnectionState); };
-            pc.onconnectionstatechange = () => { console.log('TeamVoice: connectionState for', from, pc.connectionState); };
-            if (String(user.id) > String(from)) {
-              try {
-                console.log('[TeamVoice] creating offer for', from, '(user.id=', user.id, '> from=', from, ')');
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                console.log('[TeamVoice] created and set local offer for', from, 'type=', offer.type, 'sdpLen=', (offer.sdp || '').length);
-                try {
-                  console.log('[TeamVoice] sending sdp offer to', from, 'type=', offer.type);
-                  conn.send(JSON.stringify({ type: 'sdp', sdp: offer, to: from }));
-                  // clear fallback timer if we proactively created an offer
-                  try { if (pcOfferTimersRef.current[from]) { clearTimeout(pcOfferTimersRef.current[from]); delete pcOfferTimersRef.current[from]; } } catch {}
-                } catch (err) { console.warn('[TeamVoice] send sdp offer failed', err); }
-              } catch (e) { console.error('[TeamVoice] offer creation error', e); }
-            } else {
-              console.log('[TeamVoice] NOT creating offer (user.id=', user.id, '<=', from, ')');
-            }
-          }
-          return;
-        }
-        if (msg.type === 'sdp' && msg.sdp && from) {
-          // clear any fallback offer timer since we received SDP from peer
-          try { if (pcOfferTimersRef.current[from]) { clearTimeout(pcOfferTimersRef.current[from]); delete pcOfferTimersRef.current[from]; } } catch {}
-          if (!pcRefs.current[from]) {
-            const pc = new RTCPeerConnection({
-              iceServers: [
-                { urls: "stun:stun.l.google.com:19302" },
-              ],
-            });
-            pcRefs.current[from] = pc;
-            if (localStreamRef.current) localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
-            pc.ontrack = (ev) => {
-              console.log('[TeamVoice] ontrack (sdp) fired for', from, 'track:', ev.track.kind, ev.streams.length, 'streams');
-              const remoteStream = ev.streams && ev.streams[0] ? ev.streams[0] : new MediaStream([ev.track]);
-              console.log('[TeamVoice] remoteStream (sdp):', remoteStream.id, 'active:', remoteStream.active, 'audioTracks:', remoteStream.getAudioTracks().length);
-              
-              let audioEl = audioElsRef.current[from];
-              if (!audioEl) {
-                audioEl = document.createElement('audio');
-                audioEl.autoplay = true;
-                audioEl.muted = true;
-                audioEl.volume = 1.0;
-                audioEl.setAttribute('playsinline', '');
-                audioEl.style.display = 'none';
-                document.body.appendChild(audioEl);
-                audioElsRef.current[from] = audioEl;
-                console.log('[TeamVoice] created audio element (sdp) for', from);
-              }
-              audioEl.srcObject = remoteStream;
-              console.log('[TeamVoice] assigned srcObject to audio element (sdp)');
-              
-              // Retry play with more aggressive timing and a longer backoff
-              const tryPlay = async (retries = 10, delay = 150) => {
-                try {
-                  if (audioCtxRef.current) {
-                    try { await audioCtxRef.current.resume(); } catch {}
-                  }
-                } catch {}
-                for (let i = 0; i < retries; i++) {
-                  try {
-                    console.log('[TeamVoice] attempting play (sdp) for', from, 'attempt', i + 1);
-                    const playPromise = audioEl.play();
-                    if (playPromise) {
-                      await playPromise;
-                    }
-                    try { audioEl.muted = false; } catch {}
-                    console.log('[TeamVoice] audio playing successfully (sdp) for', from);
-                    return true;
-                  } catch (err: any) {
-                    console.warn('[TeamVoice] play attempt (sdp)', i + 1, 'failed for', from, ':', err?.message);
-                    if (i < retries - 1) {
-                      await new Promise(r => setTimeout(r, delay));
-                    }
-                  }
-                }
-                console.error('[TeamVoice] all play attempts (sdp) failed for', from, '— user gesture may be required.');
-                return false;
-              };
-              tryPlay();
-              addUser(String(from));
-            };
-            pc.onicecandidate = (e) => { if (e.candidate) { try { console.log('TeamVoiceRoom: sending ice (sdp path) to', from, e.candidate); conn.send(JSON.stringify({ type: 'ice', candidate: e.candidate, to: from })); } catch (err) { console.warn('send ice failed', err); } } };
-            pc.oniceconnectionstatechange = () => { console.log('TeamVoiceRoom: iceConnectionState (sdp path) for', from, pc.iceConnectionState); };
-            pc.onconnectionstatechange = () => { console.log('TeamVoiceRoom: connectionState (sdp path) for', from, pc.connectionState); };
-          }
-          const pc = pcRefs.current[from];
-          const remoteDesc = new RTCSessionDescription(msg.sdp);
-          await pc.setRemoteDescription(remoteDesc);
-          console.log('TeamVoiceRoom: setRemoteDescription for', from, 'type=', remoteDesc.type, 'sdpLen=', (msg.sdp && msg.sdp.sdp) ? msg.sdp.sdp.length : (JSON.stringify(msg.sdp || {}).length));
-          if (remoteDesc.type === 'offer') {
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            console.log('TeamVoiceRoom: created answer for', from, 'type=', answer.type, 'sdpLen=', (answer.sdp || '').length);
-            try {
-              console.log('TeamVoiceRoom: sending sdp answer to', from, 'type=', answer.type, 'sdpLen=', (answer.sdp||'').length);
-              conn.send(JSON.stringify({ type: 'sdp', sdp: answer, to: from }));
-              // clear fallback timer after answering
-              try { if (pcOfferTimersRef.current[from]) { clearTimeout(pcOfferTimersRef.current[from]); delete pcOfferTimersRef.current[from]; } } catch {}
-            } catch (err) { console.warn('TeamVoiceRoom: send sdp answer failed', err); }
-          }
-          return;
-        }
-        if (msg.type === 'ice' && msg.candidate && from) {
-          const pc = pcRefs.current[from];
-          if (pc) {
-            try {
-              await pc.addIceCandidate(msg.candidate);
-              console.log('TeamVoiceRoom: addIceCandidate success for', from);
-            } catch (e) { console.warn('TeamVoiceRoom: addIceCandidate failed for', from, e); }
-          }
-          return;
-        }
-        if (msg.type === 'activity' && from) {
-          // speaking/activity indicator
-          try { setSpeaking && setSpeaking(String(from), !!msg.active); } catch {}
-          addUser(String(from));
-          return;
-        }
-        if (msg.type === 'user-left' && msg.userId) {
-          removeUser(String(msg.userId));
-          return;
-        }
-      } catch (e) { console.error('ws msg parse', e); }
-    };
-
-    conn.onclose = () => {
-      setJoined(false);
-      setWs(undefined);
-      try { vadRunning = false; } catch {}
-      // Schedule cleanup with a short grace period to avoid races during quick leave+rejoin
-      try {
-        if (cleanupTimerRef.current) { clearTimeout(cleanupTimerRef.current); }
-      } catch {}
-      // stop audio immediately when the ws closes so user doesn't hear remote audio after leaving
-      stopAllRemoteAudio(true);
-      cleanupTimerRef.current = window.setTimeout(() => {
-        try {
-          Object.values(pcRefs.current).forEach((p) => { try { p.close(); } catch {} });
-          pcRefs.current = {};
-          // Keep localStreamRef and audio elements alive across the grace period so quick rejoin can reuse them.
-          try { Object.values(audioElsRef.current).forEach((el) => { try { el.pause(); } catch {} }); } catch {}
-        } catch (e) { console.warn('[TeamVoice] cleanup after close failed', e); }
-        cleanupTimerRef.current = null;
-      }, 4000);
-    };
+      createSignalingConnection({
+        selectedRoomId: selectedRoomId as string,
+        userId: user.id as string,
+        authUser: user,
+        token: token,
+        setWs: setWs,
+        setJoined: setJoined,
+        setUsers: setUsers,
+        setSpeaking: setSpeaking,
+        addUser: addUser,
+        removeUser: removeUser,
+        pcRefs: pcRefs.current,
+        pcOfferTimersRef: pcOfferTimersRef.current,
+        localStreamRef: localStreamRef,
+        audioElsRef: audioElsRef.current,
+        audioCtxRef: audioCtxRef,
+        apiRef: apiRef,
+        onCallEnded: onCallEnded,
+      });
+    } catch (e) { console.error('[TeamVoice] createSignalingConnection failed', e); setIsJoining(false); }
   };
+
+  useEffect(() => {
+    if (ws) setIsJoining(false);
+  }, [ws]);
 
   useEffect(() => { if (autoJoin && selectedRoomId && !joined) doJoin(); }, [autoJoin, selectedRoomId]);
 
@@ -502,6 +101,8 @@ export function TeamVoiceRoom({ autoJoin, onCallEnded }: { autoJoin?: boolean, o
       if (onCallEnded) { onCallEnded(); return; }
     } catch (e) {}
     if (ws) { try { ws.close(); } catch {} setWs(undefined); }
+    try { stopAllRemoteAudio(audioElsRef.current, true); } catch {}
+    try { setUsers([]); } catch {}
     setJoined(false);
   };
 
@@ -520,7 +121,7 @@ export function TeamVoiceRoom({ autoJoin, onCallEnded }: { autoJoin?: boolean, o
       {!joined && (
         <div className="flex flex-col items-center justify-center h-full gap-4">
           <p className="text-lg font-semibold">Not joined to room</p>
-          <Button size="lg" onClick={() => doJoin()} disabled={!selectedRoomId || !user?.id}>Join Room</Button>
+          <Button size="lg" onClick={() => doJoin()} disabled={!selectedRoomId || !user?.id || isJoining}>{isJoining ? 'Joining…' : 'Join Room'}</Button>
         </div>
       )}
 

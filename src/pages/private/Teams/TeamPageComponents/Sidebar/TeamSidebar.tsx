@@ -49,6 +49,7 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
   const [topMenuOpen, setTopMenuOpen] = useState(false);
   const { openTeam } = useTeamStore()
   const { rooms, setRooms, selectRoom } = useVoiceStore();
+  const { users, selectedRoomId } = useVoiceStore();
 
   const chatRooms = [
     { title: "General"},
@@ -81,7 +82,7 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
       setRooms(data);
       setRoomName("");
       if (created && created.id) {
-        selectRoom(created.id);
+        selectRoom(String(created.id));
         openScreenFn("VoiceRoom");
       }
       setDialogOpen(false);
@@ -96,7 +97,7 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
           if (data && data.length > 0) {
             // prefer room with same id as team if present
             const prefer = data.find((r) => r.id === String(openTeam.id)) || data[0];
-            selectRoom(prefer.id);
+            selectRoom(String(prefer.id));
             openScreenFn("VoiceRoom");
             setRoomName("");
             setDialogOpen(false);
@@ -258,15 +259,15 @@ export function TeamSidebar({ openScreenFn }: TeamSidebarProps) {
                       className="cursor-pointer"
                       key={room.id}
                       onClick={() => {
-                        selectRoom(room.id);
-                        openScreenFn("VoiceRoom");
-                      }}
+                          selectRoom(String(room.id));
+                          openScreenFn("VoiceRoom");
+                        }}
                     >
                       <SidebarMenuButton asChild>
                         <div className="justify-between">
                           <p className="line-clamp-1">{room.name}</p>
                           <div className="flex items-center gap-1">
-                            {room.userCount}
+                            {String(room.id) === String(selectedRoomId) ? (users ? users.length : room.userCount) : room.userCount}
                             <UsersRound size={20}/>
                           </div>
                         </div>

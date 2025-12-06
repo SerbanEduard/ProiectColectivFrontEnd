@@ -30,7 +30,15 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   setUsers: (users) => set({ users }),
   addUser: (user) => set((s) => {
     const maybeObj: VoiceUser = typeof user === 'string' ? { userId: user } : user;
-    if (s.users.some((u) => u.userId === maybeObj.userId)) return s;
+    const exists = s.users.some((u) => u.userId === maybeObj.userId);
+    if (exists) {
+      // If we received a username update for an existing user, update it
+      if (maybeObj.username) {
+        const updated = s.users.map((u) => (u.userId === maybeObj.userId ? { ...u, username: maybeObj.username } : u));
+        return { users: updated };
+      }
+      return s;
+    }
     return { users: [...s.users, maybeObj] };
   }),
   removeUser: (userId) => set((s) => ({ users: s.users.filter((u) => u.userId !== userId) })),
