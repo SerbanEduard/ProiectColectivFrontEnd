@@ -48,7 +48,7 @@ import {
 import type { EnrichedPending } from "@/services/react-query/friend";
 import type { DtoUserResponse } from "@/api";
 import { api as generatedApi } from "@/services/react-query/api";
-import { sendDirectMessageWithRetry } from '@/services/api/messages';
+import { sendDirectMessageWithRetry } from '@/services/react-query/messages';
 import { useFriendStore } from "@/services/stores/useFriendStore";
 import { useAuthStore } from "@/services/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
