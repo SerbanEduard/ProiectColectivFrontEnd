@@ -36,12 +36,11 @@ export default function TrackProgress() {
         getUserStatsAsync({ id: id as string }),
         {
           loading: "Loading statistics...",
-          success: () => "Statistics loaded successfully!",
           error: (err: unknown) => {
             if (axios.isAxiosError(err)) {
               const status = err.response?.status;
               if (status === 401) return "Unauthorized";
-              if (status === 404) return "User not found";
+              if (status === 404) return "Stats not found";
               if (status === 500) return "Server error";
               return err.response?.data?.message || err.message || FAILED_FATCHED_STATS;
             }
@@ -60,6 +59,10 @@ export default function TrackProgress() {
   }
 
   const addCard = (type: ViewType) => {
+    if (cards.some(card => card.type === type)) {
+      return;
+    }
+
     const newCard = {
       id: `${type}-${Date.now()}`,
       type

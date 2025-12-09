@@ -13,6 +13,8 @@ import { useUpdateUserData, useUpdateUserPassword } from "@/services/react-query
 import { toast } from "sonner";
 import axios from "axios";
 import { useState } from "react";
+import homeLogo from "@/assets/home.png"
+import { useNavigate } from "react-router-dom";
 
 const FAILED_UPDATE_PASSWORD = "Password update failed";
 const FAILED_UPDATE_ACCOUNT_INFO = "Account update failed";
@@ -142,13 +144,21 @@ export default function EditAccountInfo() {
     );
   }
 
+  const navigate = useNavigate();
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="relative w-full max-w-2xl p-6 shadow-md">
         {/* Logo in top-left corner */}
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 right-4">
           <img src={logo} alt="StudyFlow Logo" className="w-12 h-12" />
         </div>
+
+        <Button variant="ghost" className="absolute top-4 left-4 p-2"
+          onClick = {() => navigate("/home")}
+        >
+          <img src={homeLogo} alt="Home" className="w-6 h-6" />
+        </Button>
          
         <CardContent className="pt-8">
           <CardHeader className="text-center mb-6">
