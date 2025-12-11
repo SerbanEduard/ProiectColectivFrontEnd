@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 // lazy-load notifier to avoid circular runtime deps
 const CallNotifier = lazy(() => import('./CallNotifier'));
 import { NavLink, useNavigate } from "react-router-dom";
